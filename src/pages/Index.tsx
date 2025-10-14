@@ -1,12 +1,87 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { GraduationCap, Target, TrendingUp, Users } from 'lucide-react';
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="flex min-h-screen flex-col">
+      <header className="border-b">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+          <div className="flex items-center gap-2">
+            <GraduationCap className="h-6 w-6 text-primary" />
+            <span className="text-xl font-bold">Internship Mentorship Platform</span>
+          </div>
+          <Link to="/auth">
+            <Button>Get Started</Button>
+          </Link>
+        </div>
+      </header>
+
+      <main className="flex-1">
+        <section className="container mx-auto px-4 py-20 text-center">
+          <h1 className="mb-6 text-5xl font-bold tracking-tight">
+            Transform Your Internship Experience
+          </h1>
+          <p className="mx-auto mb-8 max-w-2xl text-xl text-muted-foreground">
+            A comprehensive platform for mentors and students to track progress, manage evaluations,
+            and achieve professional growth throughout the internship journey.
+          </p>
+          <Link to="/auth">
+            <Button size="lg" className="text-lg">
+              Start Your Journey
+            </Button>
+          </Link>
+        </section>
+
+        <section className="border-t bg-secondary/30 py-20">
+          <div className="container mx-auto px-4">
+            <h2 className="mb-12 text-center text-3xl font-bold">Key Features</h2>
+            <div className="grid gap-8 md:grid-cols-3">
+              <div className="rounded-lg border bg-card p-6 text-center">
+                <div className="mb-4 flex justify-center">
+                  <div className="rounded-full bg-primary p-3">
+                    <Target className="h-6 w-6 text-primary-foreground" />
+                  </div>
+                </div>
+                <h3 className="mb-2 text-xl font-semibold">Track Progress</h3>
+                <p className="text-muted-foreground">
+                  Monitor weekly tasks, deliverables, and milestones throughout the internship
+                </p>
+              </div>
+              
+              <div className="rounded-lg border bg-card p-6 text-center">
+                <div className="mb-4 flex justify-center">
+                  <div className="rounded-full bg-accent p-3">
+                    <TrendingUp className="h-6 w-6 text-accent-foreground" />
+                  </div>
+                </div>
+                <h3 className="mb-2 text-xl font-semibold">Performance Evaluation</h3>
+                <p className="text-muted-foreground">
+                  Comprehensive scoring system with self-assessment and supervisor feedback
+                </p>
+              </div>
+              
+              <div className="rounded-lg border bg-card p-6 text-center">
+                <div className="mb-4 flex justify-center">
+                  <div className="rounded-full bg-primary p-3">
+                    <Users className="h-6 w-6 text-primary-foreground" />
+                  </div>
+                </div>
+                <h3 className="mb-2 text-xl font-semibold">Collaboration Tools</h3>
+                <p className="text-muted-foreground">
+                  Comments, meetings, resources, and real-time communication features
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t py-8">
+        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+          © 2025 Internship Mentorship Platform. All rights reserved.
+        </div>
+      </footer>
     </div>
   );
 };
