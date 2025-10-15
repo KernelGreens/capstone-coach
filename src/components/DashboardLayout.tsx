@@ -10,12 +10,12 @@ import {
   FileText, 
   Calendar, 
   Library, 
-  Bell,
   LogOut,
   GraduationCap,
   Settings,
   BarChart3
 } from 'lucide-react';
+import { NotificationBell } from './NotificationBell';
 import { cn } from '@/lib/utils';
 
 interface DashboardLayoutProps {
@@ -85,12 +85,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
           {/* User Actions */}
           <div className="border-t border-sidebar-border p-4 space-y-2">
-            <Link to="/notifications">
-              <Button variant="ghost" className="w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent/50">
-                <Bell className="h-5 w-5" />
-                Notifications
-              </Button>
-            </Link>
+            <div className="flex items-center justify-between px-3 py-2">
+              <span className="text-sm text-sidebar-foreground">Notifications</span>
+              <NotificationBell />
+            </div>
             <Link to="/settings">
               <Button variant="ghost" className="w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent/50">
                 <Settings className="h-5 w-5" />
