@@ -15,6 +15,7 @@ import MyProgress from "./pages/MyProgress";
 import Evaluations from "./pages/Evaluations";
 import Meetings from "./pages/Meetings";
 import Resources from "./pages/Resources";
+import Setup from "./pages/Setup";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,8 +29,9 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/setup" element={<Setup />} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/students" element={<ProtectedRoute allowedRoles={['supervisor']}><Students /></ProtectedRoute>} />
             <Route path="/tracks" element={<ProtectedRoute allowedRoles={['supervisor']}><Tracks /></ProtectedRoute>} />
             <Route path="/projects" element={<ProtectedRoute allowedRoles={['supervisor']}><Projects /></ProtectedRoute>} />
