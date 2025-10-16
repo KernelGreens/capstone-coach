@@ -8,14 +8,22 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Mail, Calendar } from 'lucide-react';
+import { Plus, Mail, Calendar, Search, Edit, Trash2, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 export default function Students() {
   const [students, setStudents] = useState<any[]>([]);
+  const [filteredStudents, setFilteredStudents] = useState<any[]>([]);
   const [tracks, setTracks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const { toast } = useToast();
 
   const [newStudent, setNewStudent] = useState({
@@ -26,9 +34,20 @@ export default function Students() {
     end_date: '',
   });
 
+  const [editStudent, setEditStudent] = useState({
+    track_id: '',
+    start_date: '',
+    end_date: '',
+    status: '',
+  });
+
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    filterStudents();
+  }, [students, searchQuery, statusFilter]);
 
   const fetchData = async () => {
     const [studentsRes, tracksRes] = await Promise.all([
@@ -47,13 +66,158 @@ export default function Students() {
     setLoading(false);
   };
 
+  const filterStudents = () => {
+    let filtered = [...students];
+
+    if (searchQuery) {
+      filtered = filtered.filter(student =>
+        student.profiles?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        student.profiles?.email?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(student => student.status === statusFilter);
+    }
+
+    setFilteredStudents(filtered);
+  };
+
   const handleAddStudent = async () => {
-    // This would typically involve creating a user first, then a student record
-    toast({
-      title: 'Info',
-      description: 'Student invitation functionality would be implemented here',
+    if (!newStudent.email || !newStudent.full_name || !newStudent.track_id || !newStudent.start_date || !newStudent.end_date) {
+      toast({
+        title: 'Error',
+        description: 'Please fill in all required fields',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invite-student`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session?.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newStudent),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to invite student');
+      }
+
+      toast({
+        title: 'Success',
+        description: 'Student invited successfully',
+      });
+
+      setOpen(false);
+      setNewStudent({
+        email: '',
+        full_name: '',
+        track_id: '',
+        start_date: '',
+        end_date: '',
+      });
+      fetchData();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleEditStudent = async () => {
+    if (!selectedStudent) return;
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('students')
+        .update({
+          track_id: editStudent.track_id,
+          start_date: editStudent.start_date,
+          end_date: editStudent.end_date,
+          status: editStudent.status,
+        })
+        .eq('id', selectedStudent.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: 'Student updated successfully',
+      });
+
+      setEditOpen(false);
+      setSelectedStudent(null);
+      fetchData();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteStudent = async () => {
+    if (!selectedStudent) return;
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('students')
+        .update({ status: 'inactive' })
+        .eq('id', selectedStudent.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: 'Student deactivated successfully',
+      });
+
+      setDeleteOpen(false);
+      setSelectedStudent(null);
+      fetchData();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const openEditDialog = (student: any) => {
+    setSelectedStudent(student);
+    setEditStudent({
+      track_id: student.track_id || '',
+      start_date: student.start_date,
+      end_date: student.end_date,
+      status: student.status,
     });
-    setOpen(false);
+    setEditOpen(true);
+  };
+
+  const openDeleteDialog = (student: any) => {
+    setSelectedStudent(student);
+    setDeleteOpen(true);
   };
 
   return (
@@ -73,26 +237,28 @@ export default function Students() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add New Student</DialogTitle>
+                <DialogTitle>Invite New Student</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label>Full Name</Label>
+                  <Label>Full Name *</Label>
                   <Input
                     value={newStudent.full_name}
                     onChange={(e) => setNewStudent({ ...newStudent, full_name: e.target.value })}
+                    placeholder="Enter full name"
                   />
                 </div>
                 <div>
-                  <Label>Email</Label>
+                  <Label>Email *</Label>
                   <Input
                     type="email"
                     value={newStudent.email}
                     onChange={(e) => setNewStudent({ ...newStudent, email: e.target.value })}
+                    placeholder="student@example.com"
                   />
                 </div>
                 <div>
-                  <Label>Track</Label>
+                  <Label>Track *</Label>
                   <Select value={newStudent.track_id} onValueChange={(value) => setNewStudent({ ...newStudent, track_id: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select track" />
@@ -107,7 +273,7 @@ export default function Students() {
                   </Select>
                 </div>
                 <div>
-                  <Label>Start Date</Label>
+                  <Label>Start Date *</Label>
                   <Input
                     type="date"
                     value={newStudent.start_date}
@@ -115,53 +281,203 @@ export default function Students() {
                   />
                 </div>
                 <div>
-                  <Label>End Date</Label>
+                  <Label>End Date *</Label>
                   <Input
                     type="date"
                     value={newStudent.end_date}
                     onChange={(e) => setNewStudent({ ...newStudent, end_date: e.target.value })}
                   />
                 </div>
-                <Button onClick={handleAddStudent} className="w-full">
-                  Send Invitation
+                <Button onClick={handleAddStudent} className="w-full" disabled={submitting}>
+                  {submitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending Invitation...
+                    </>
+                  ) : (
+                    'Send Invitation'
+                  )}
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {students.map((student) => (
-            <Card key={student.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{student.profiles?.full_name}</CardTitle>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                      <Mail className="h-3 w-3" />
-                      {student.profiles?.email}
-                    </p>
-                  </div>
-                  <Badge variant={student.status === 'active' ? 'default' : 'secondary'}>
-                    {student.status}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="font-medium">Track:</span>
-                  <span className="text-muted-foreground">{student.tracks?.name || 'Not assigned'}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="h-4 w-4" />
-                  <span className="text-muted-foreground">
-                    {new Date(student.start_date).toLocaleDateString()} - {new Date(student.end_date).toLocaleDateString()}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name or email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : filteredStudents.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <p className="text-muted-foreground">No students found</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredStudents.map((student) => (
+              <Card key={student.id}>
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">{student.profiles?.full_name}</CardTitle>
+                      <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                        <Mail className="h-3 w-3" />
+                        {student.profiles?.email}
+                      </p>
+                    </div>
+                    <Badge variant={student.status === 'active' ? 'default' : 'secondary'}>
+                      {student.status}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="font-medium">Track:</span>
+                    <span className="text-muted-foreground">{student.tracks?.name || 'Not assigned'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="h-4 w-4" />
+                    <span className="text-muted-foreground">
+                      {new Date(student.start_date).toLocaleDateString()} - {new Date(student.end_date).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => openEditDialog(student)}
+                    >
+                      <Edit className="h-3 w-3 mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openDeleteDialog(student)}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Edit Dialog */}
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Student</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Track</Label>
+                <Select value={editStudent.track_id} onValueChange={(value) => setEditStudent({ ...editStudent, track_id: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select track" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tracks.map((track) => (
+                      <SelectItem key={track.id} value={track.id}>
+                        {track.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Start Date</Label>
+                <Input
+                  type="date"
+                  value={editStudent.start_date}
+                  onChange={(e) => setEditStudent({ ...editStudent, start_date: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>End Date</Label>
+                <Input
+                  type="date"
+                  value={editStudent.end_date}
+                  onChange={(e) => setEditStudent({ ...editStudent, end_date: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Status</Label>
+                <Select value={editStudent.status} onValueChange={(value) => setEditStudent({ ...editStudent, status: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleEditStudent} className="w-full" disabled={submitting}>
+                {submitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  'Update Student'
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Deactivate Student</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to deactivate {selectedStudent?.profiles?.full_name}? This will change their status to inactive.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteStudent} disabled={submitting}>
+                {submitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deactivating...
+                  </>
+                ) : (
+                  'Deactivate'
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );
