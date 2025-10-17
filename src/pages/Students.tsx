@@ -55,7 +55,7 @@ export default function Students() {
         .from('students')
         .select(`
           *,
-          profiles:user_id(full_name, email),
+          profiles!students_user_id_fkey(full_name, email),
           tracks(name)
         `),
       supabase.from('tracks').select('*'),
