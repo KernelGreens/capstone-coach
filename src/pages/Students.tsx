@@ -2,15 +2,17 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Mail, Calendar, Search, Edit, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Mail, Calendar, Search, Edit, Trash2, Loader2, Eye, Users, GraduationCap, TrendingUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Students() {
   const [students, setStudents] = useState<any[]>([]);
@@ -21,9 +23,12 @@ export default function Students() {
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [studentProgress, setStudentProgress] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [trackFilter, setTrackFilter] = useState<string>('all');
   const { toast } = useToast();
 
   const [newStudent, setNewStudent] = useState({
@@ -47,7 +52,7 @@ export default function Students() {
 
   useEffect(() => {
     filterStudents();
-  }, [students, searchQuery, statusFilter]);
+  }, [students, searchQuery, statusFilter, trackFilter]);
 
   const fetchData = async () => {
     const [studentsRes, tracksRes] = await Promise.all([
@@ -78,6 +83,10 @@ export default function Students() {
 
     if (statusFilter !== 'all') {
       filtered = filtered.filter(student => student.status === statusFilter);
+    }
+
+    if (trackFilter !== 'all') {
+      filtered = filtered.filter(student => student.track_id === trackFilter);
     }
 
     setFilteredStudents(filtered);
@@ -220,10 +229,54 @@ export default function Students() {
     setDeleteOpen(true);
   };
 
+  const openDetailDialog = async (student: any) => {
+    setSelectedStudent(student);
+    setDetailOpen(true);
+    
+    // Fetch student's weekly progress
+    const { data } = await supabase
+      .from('weekly_progress')
+      .select('*')
+      .eq('student_id', student.id)
+      .order('week_number', { ascending: true });
+    
+    setStudentProgress(data || []);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'default';
+      case 'completed':
+        return 'secondary';
+      case 'inactive':
+        return 'outline';
+      default:
+        return 'outline';
+    }
+  };
+
+  const calculateProgress = () => {
+    if (studentProgress.length === 0) return 0;
+    const completed = studentProgress.filter(p => p.status === 'completed').length;
+    return Math.round((completed / studentProgress.length) * 100);
+  };
+
+  const getStats = () => {
+    return {
+      total: students.length,
+      active: students.filter(s => s.status === 'active').length,
+      completed: students.filter(s => s.status === 'completed').length,
+      inactive: students.filter(s => s.status === 'inactive').length,
+    };
+  };
+
+  const stats = getStats();
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold">Students Management</h1>
             <p className="text-muted-foreground">Manage and monitor all interns</p>
@@ -238,6 +291,9 @@ export default function Students() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Invite New Student</DialogTitle>
+                <DialogDescription>
+                  Send an invitation email to a new student to join the program
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
@@ -303,6 +359,48 @@ export default function Students() {
           </Dialog>
         </div>
 
+        {/* Stats Cards */}
+        {!loading && (
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Total Students</CardDescription>
+                <CardTitle className="text-3xl flex items-center gap-2">
+                  <Users className="h-6 w-6 text-primary" />
+                  {stats.total}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Active</CardDescription>
+                <CardTitle className="text-3xl flex items-center gap-2">
+                  <GraduationCap className="h-6 w-6 text-green-600" />
+                  {stats.active}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Completed</CardDescription>
+                <CardTitle className="text-3xl flex items-center gap-2">
+                  <TrendingUp className="h-6 w-6 text-blue-600" />
+                  {stats.completed}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Inactive</CardDescription>
+                <CardTitle className="text-3xl flex items-center gap-2">
+                  <Users className="h-6 w-6 text-muted-foreground" />
+                  {stats.inactive}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -324,11 +422,39 @@ export default function Students() {
               <SelectItem value="completed">Completed</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={trackFilter} onValueChange={setTrackFilter}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Filter by track" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Tracks</SelectItem>
+              {tracks.map((track) => (
+                <SelectItem key={track.id} value={track.id}>
+                  {track.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <Skeleton className="h-6 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2" />
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-2/3" />
+                  <div className="flex gap-2 pt-2">
+                    <Skeleton className="h-9 flex-1" />
+                    <Skeleton className="h-9 w-20" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         ) : filteredStudents.length === 0 ? (
           <Card>
@@ -369,7 +495,14 @@ export default function Students() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1"
+                      onClick={() => openDetailDialog(student)}
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      View
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => openEditDialog(student)}
                     >
                       <Edit className="h-3 w-3 mr-1" />
@@ -389,11 +522,108 @@ export default function Students() {
           </div>
         )}
 
+        {/* Detail Dialog */}
+        <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Student Details</DialogTitle>
+              <DialogDescription>
+                View comprehensive information about the student
+              </DialogDescription>
+            </DialogHeader>
+            {selectedStudent && (
+              <div className="space-y-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-xl font-semibold">{selectedStudent.profiles?.full_name}</h3>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                      <Mail className="h-3 w-3" />
+                      {selectedStudent.profiles?.email}
+                    </p>
+                  </div>
+                  <Badge variant={getStatusColor(selectedStudent.status)}>
+                    {selectedStudent.status}
+                  </Badge>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label className="text-muted-foreground">Track</Label>
+                    <p className="font-medium">{selectedStudent.tracks?.name || 'Not assigned'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Duration</Label>
+                    <p className="font-medium flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      {new Date(selectedStudent.start_date).toLocaleDateString()} - {new Date(selectedStudent.end_date).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label>Overall Progress</Label>
+                    <span className="text-sm font-medium">{calculateProgress()}%</span>
+                  </div>
+                  <Progress value={calculateProgress()} className="h-2" />
+                </div>
+
+                <div>
+                  <Label className="mb-3 block">Weekly Progress Summary</Label>
+                  {studentProgress.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">No progress data available</p>
+                  ) : (
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {studentProgress.map((progress) => (
+                        <div key={progress.id} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex-1">
+                            <p className="font-medium">Week {progress.week_number}</p>
+                            <p className="text-sm text-muted-foreground">{progress.week_focus || 'No focus set'}</p>
+                          </div>
+                          <Badge variant={
+                            progress.status === 'completed' ? 'default' :
+                            progress.status === 'pending' ? 'secondary' : 'outline'
+                          }>
+                            {progress.status}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-2 pt-4 border-t">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      setDetailOpen(false);
+                      openEditDialog(selectedStudent);
+                    }}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Student
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setDetailOpen(false)}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
         {/* Edit Dialog */}
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Edit Student</DialogTitle>
+              <DialogDescription>
+                Update student information and track assignment
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
