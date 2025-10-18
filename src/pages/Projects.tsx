@@ -10,13 +10,21 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, BookOpen } from 'lucide-react';
+import { Plus, BookOpen, Edit, Trash2, Search, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Projects() {
   const [projects, setProjects] = useState<any[]>([]);
   const [tracks, setTracks] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [editingProject, setEditingProject] = useState<any>(null);
+  const [deletingProject, setDeletingProject] = useState<any>(null);
+  const [viewProject, setViewProject] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTrack, setSelectedTrack] = useState<string>('all');
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -35,6 +43,7 @@ export default function Projects() {
   }, []);
 
   const fetchData = async () => {
+    setLoading(true);
     const [projectsRes, tracksRes] = await Promise.all([
       supabase.from('projects').select('*, tracks(name)').order('week_number', { ascending: true }),
       supabase.from('tracks').select('*'),
@@ -42,6 +51,7 @@ export default function Projects() {
 
     setProjects(projectsRes.data || []);
     setTracks(tracksRes.data || []);
+    setLoading(false);
   };
 
   const handleSubmit = async () => {
@@ -54,10 +64,22 @@ export default function Projects() {
       return;
     }
 
-    const { error } = await supabase.from('projects').insert([{
+    const projectData = {
       ...formData,
       week_number: formData.week_number ? parseInt(formData.week_number) : null,
-    }]);
+    };
+
+    let error;
+    if (editingProject) {
+      const result = await supabase
+        .from('projects')
+        .update(projectData)
+        .eq('id', editingProject.id);
+      error = result.error;
+    } else {
+      const result = await supabase.from('projects').insert([projectData]);
+      error = result.error;
+    }
 
     if (error) {
       toast({
@@ -68,25 +90,77 @@ export default function Projects() {
     } else {
       toast({
         title: 'Success',
-        description: 'Project created successfully',
+        description: editingProject ? 'Project updated successfully' : 'Project created successfully',
       });
-      setOpen(false);
-      setFormData({
-        track_id: '',
-        title: '',
-        description: '',
-        project_type: 'mini',
-        week_number: '',
-        objectives: '',
-        deliverables: '',
-        tools_technologies: '',
-      });
+      handleCloseDialog();
       fetchData();
     }
   };
 
-  const miniProjects = projects.filter(p => p.project_type === 'mini');
-  const capstoneProjects = projects.filter(p => p.project_type === 'capstone');
+  const handleEdit = (project: any) => {
+    setEditingProject(project);
+    setFormData({
+      track_id: project.track_id,
+      title: project.title,
+      description: project.description || '',
+      project_type: project.project_type,
+      week_number: project.week_number?.toString() || '',
+      objectives: project.objectives || '',
+      deliverables: project.deliverables || '',
+      tools_technologies: project.tools_technologies || '',
+    });
+    setOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deletingProject) return;
+
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', deletingProject.id);
+
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message,
+      });
+    } else {
+      toast({
+        title: 'Success',
+        description: 'Project deleted successfully',
+      });
+      setDeletingProject(null);
+      fetchData();
+    }
+  };
+
+  const handleCloseDialog = () => {
+    setOpen(false);
+    setEditingProject(null);
+    setFormData({
+      track_id: '',
+      title: '',
+      description: '',
+      project_type: 'mini',
+      week_number: '',
+      objectives: '',
+      deliverables: '',
+      tools_technologies: '',
+    });
+  };
+
+  const filteredProjects = projects.filter((project) => {
+    const matchesSearch = project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.tracks?.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesTrack = selectedTrack === 'all' || project.track_id === selectedTrack;
+    return matchesSearch && matchesTrack;
+  });
+
+  const miniProjects = filteredProjects.filter(p => p.project_type === 'mini');
+  const capstoneProjects = filteredProjects.filter(p => p.project_type === 'capstone');
 
   return (
     <DashboardLayout>
@@ -96,7 +170,7 @@ export default function Projects() {
             <h1 className="text-3xl font-bold">Projects Management</h1>
             <p className="text-muted-foreground">Define projects and assignments for each track</p>
           </div>
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={open} onOpenChange={handleCloseDialog}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
@@ -105,7 +179,7 @@ export default function Projects() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Create New Project</DialogTitle>
+                <DialogTitle>{editingProject ? 'Edit Project' : 'Create New Project'}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -190,90 +264,257 @@ export default function Projects() {
                   />
                 </div>
                 <Button onClick={handleSubmit} className="w-full">
-                  Create Project
+                  {editingProject ? 'Update Project' : 'Create Project'}
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
         </div>
 
-        <Tabs defaultValue="all">
-          <TabsList>
-            <TabsTrigger value="all">All Projects</TabsTrigger>
-            <TabsTrigger value="mini">Mini Projects</TabsTrigger>
-            <TabsTrigger value="capstone">Capstone Projects</TabsTrigger>
-          </TabsList>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search projects..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select value={selectedTrack} onValueChange={setSelectedTrack}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectValue placeholder="Filter by track" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Tracks</SelectItem>
+              {tracks.map((track) => (
+                <SelectItem key={track.id} value={track.id}>
+                  {track.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-          <TabsContent value="all" className="space-y-4">
-            {projects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
+        {loading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-4 w-1/2 mt-2" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-20 w-full" />
+                </CardContent>
+              </Card>
             ))}
-          </TabsContent>
+          </div>
+        ) : (
+          <Tabs defaultValue="all">
+            <TabsList>
+              <TabsTrigger value="all">
+                All Projects ({filteredProjects.length})
+              </TabsTrigger>
+              <TabsTrigger value="mini">
+                Mini Projects ({miniProjects.length})
+              </TabsTrigger>
+              <TabsTrigger value="capstone">
+                Capstone Projects ({capstoneProjects.length})
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="mini" className="space-y-4">
-            {miniProjects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
-            ))}
-          </TabsContent>
+            <TabsContent value="all" className="space-y-4">
+              {filteredProjects.length === 0 ? (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-lg font-medium">No projects found</p>
+                    <p className="text-sm text-muted-foreground">
+                      {searchQuery || selectedTrack !== 'all' 
+                        ? 'Try adjusting your filters'
+                        : 'Create your first project to get started'
+                      }
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                filteredProjects.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    onEdit={handleEdit}
+                    onDelete={setDeletingProject}
+                    onView={setViewProject}
+                  />
+                ))
+              )}
+            </TabsContent>
 
-          <TabsContent value="capstone" className="space-y-4">
-            {capstoneProjects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
-            ))}
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="mini" className="space-y-4">
+              {miniProjects.length === 0 ? (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-lg font-medium">No mini projects found</p>
+                    <p className="text-sm text-muted-foreground">Create your first mini project</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                miniProjects.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    onEdit={handleEdit}
+                    onDelete={setDeletingProject}
+                    onView={setViewProject}
+                  />
+                ))
+              )}
+            </TabsContent>
+
+            <TabsContent value="capstone" className="space-y-4">
+              {capstoneProjects.length === 0 ? (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-lg font-medium">No capstone projects found</p>
+                    <p className="text-sm text-muted-foreground">Create your first capstone project</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                capstoneProjects.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    onEdit={handleEdit}
+                    onDelete={setDeletingProject}
+                    onView={setViewProject}
+                  />
+                ))
+              )}
+            </TabsContent>
+          </Tabs>
+        )}
+
+        <AlertDialog open={!!deletingProject} onOpenChange={() => setDeletingProject(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Project</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{deletingProject?.title}"? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <Dialog open={!!viewProject} onOpenChange={() => setViewProject(null)}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-primary" />
+                {viewProject?.title}
+              </DialogTitle>
+            </DialogHeader>
+            {viewProject && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Badge variant={viewProject.project_type === 'capstone' ? 'default' : 'secondary'}>
+                    {viewProject.project_type}
+                  </Badge>
+                  <span className="text-sm text-muted-foreground">
+                    {viewProject.tracks?.name}
+                  </span>
+                  {viewProject.week_number && (
+                    <span className="text-sm text-muted-foreground">• Week {viewProject.week_number}</span>
+                  )}
+                </div>
+                {viewProject.description && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Description</h4>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{viewProject.description}</p>
+                  </div>
+                )}
+                {viewProject.objectives && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Learning Objectives</h4>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{viewProject.objectives}</p>
+                  </div>
+                )}
+                {viewProject.deliverables && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Deliverables</h4>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{viewProject.deliverables}</p>
+                  </div>
+                )}
+                {viewProject.tools_technologies && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Tools & Technologies</h4>
+                    <p className="text-sm text-muted-foreground">{viewProject.tools_technologies}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
 }
 
-function ProjectCard({ project }: { project: any }) {
+function ProjectCard({ project, onEdit, onDelete, onView }: { 
+  project: any;
+  onEdit: (project: any) => void;
+  onDelete: (project: any) => void;
+  onView: (project: any) => void;
+}) {
   return (
     <Card>
       <CardHeader>
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <BookOpen className="h-5 w-5 text-primary" />
-            <div>
-              <CardTitle>{project.title}</CardTitle>
+          <div className="flex items-center gap-3 flex-1">
+            <BookOpen className="h-5 w-5 text-primary flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <CardTitle className="truncate">{project.title}</CardTitle>
               <CardDescription className="mt-1">
                 {project.tracks?.name} {project.week_number && `• Week ${project.week_number}`}
               </CardDescription>
             </div>
           </div>
-          <Badge variant={project.project_type === 'capstone' ? 'default' : 'secondary'}>
-            {project.project_type}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant={project.project_type === 'capstone' ? 'default' : 'secondary'}>
+              {project.project_type}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
-      {(project.description || project.objectives || project.deliverables || project.tools_technologies) && (
-        <CardContent className="space-y-3">
-          {project.description && (
-            <div>
-              <p className="text-sm font-medium">Description:</p>
-              <p className="text-sm text-muted-foreground">{project.description}</p>
-            </div>
-          )}
-          {project.objectives && (
-            <div>
-              <p className="text-sm font-medium">Objectives:</p>
-              <p className="text-sm text-muted-foreground">{project.objectives}</p>
-            </div>
-          )}
-          {project.deliverables && (
-            <div>
-              <p className="text-sm font-medium">Deliverables:</p>
-              <p className="text-sm text-muted-foreground">{project.deliverables}</p>
-            </div>
-          )}
-          {project.tools_technologies && (
-            <div>
-              <p className="text-sm font-medium">Tools & Technologies:</p>
-              <p className="text-sm text-muted-foreground">{project.tools_technologies}</p>
-            </div>
-          )}
-        </CardContent>
-      )}
+      <CardContent className="space-y-3">
+        {project.description && (
+          <div>
+            <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
+          </div>
+        )}
+        <div className="flex gap-2 pt-2">
+          <Button variant="outline" size="sm" onClick={() => onView(project)}>
+            <Eye className="h-4 w-4 mr-1" />
+            View Details
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => onEdit(project)}>
+            <Edit className="h-4 w-4 mr-1" />
+            Edit
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => onDelete(project)}>
+            <Trash2 className="h-4 w-4 mr-1" />
+            Delete
+          </Button>
+        </div>
+      </CardContent>
     </Card>
   );
 }
