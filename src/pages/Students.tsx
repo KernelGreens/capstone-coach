@@ -60,11 +60,20 @@ export default function Students() {
         .from('students')
         .select(`
           *,
-          profiles!students_user_id_fkey(full_name, email),
+          profiles!user_id(full_name, email),
           tracks(name)
         `),
       supabase.from('tracks').select('*'),
     ]);
+
+    if (studentsRes.error) {
+      console.error('Error fetching students:', studentsRes.error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load students. Please refresh the page.',
+        variant: 'destructive',
+      });
+    }
 
     setStudents(studentsRes.data || []);
     setTracks(tracksRes.data || []);
