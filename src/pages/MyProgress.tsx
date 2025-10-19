@@ -3,22 +3,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { FileText, CheckCircle2, Clock, Upload } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { WeekProgressCard } from '@/components/progress/WeekProgressCard';
+import { Skeleton } from '@/components/ui/skeleton';
+import { TrendingUp, Target, Award } from 'lucide-react';
 
 export default function MyProgress() {
   const { user } = useAuth();
   const [student, setStudent] = useState<any>(null);
   const [weeklyProgress, setWeeklyProgress] = useState<any[]>([]);
-  const [selectedWeek, setSelectedWeek] = useState<any>(null);
-  const [selfAssessment, setSelfAssessment] = useState({ score: '', notes: '' });
-  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -27,6 +21,7 @@ export default function MyProgress() {
   }, [user]);
 
   const fetchData = async () => {
+    setLoading(true);
     const { data: studentData } = await supabase
       .from('students')
       .select('*')
@@ -44,55 +39,37 @@ export default function MyProgress() {
 
       setWeeklyProgress(progressData || []);
     }
-  };
-
-  const handleSelfAssessment = async () => {
-    if (!selectedWeek || !selfAssessment.score) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Please provide a score',
-      });
-      return;
-    }
-
-    const { error } = await supabase
-      .from('weekly_progress')
-      .update({
-        self_assessment_score: parseFloat(selfAssessment.score),
-        self_assessment_notes: selfAssessment.notes,
-      })
-      .eq('id', selectedWeek.id);
-
-    if (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: error.message,
-      });
-    } else {
-      toast({
-        title: 'Success',
-        description: 'Self-assessment submitted successfully',
-      });
-      setSelfAssessment({ score: '', notes: '' });
-      setSelectedWeek(null);
-      fetchData();
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const variants: any = {
-      pending: 'secondary',
-      in_progress: 'default',
-      completed: 'default',
-      overdue: 'destructive',
-    };
-    return <Badge variant={variants[status] || 'secondary'}>{status}</Badge>;
+    setLoading(false);
   };
 
   const completedCount = weeklyProgress.filter(w => w.status === 'completed').length;
   const progress = weeklyProgress.length > 0 ? (completedCount / weeklyProgress.length) * 100 : 0;
+  
+  const avgSelfScore = weeklyProgress.length > 0
+    ? weeklyProgress.reduce((sum, w) => sum + (w.self_assessment_score || 0), 0) / weeklyProgress.length
+    : 0;
+  
+  const avgSupervisorScore = weeklyProgress.filter(w => w.supervisor_score).length > 0
+    ? weeklyProgress
+        .filter(w => w.supervisor_score)
+        .reduce((sum, w) => sum + (w.supervisor_score || 0), 0) / weeklyProgress.filter(w => w.supervisor_score).length
+    : 0;
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <Skeleton className="h-12 w-64" />
+          <Skeleton className="h-32" />
+          <div className="grid gap-4 md:grid-cols-3">
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} className="h-24" />
+            ))}
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -102,106 +79,60 @@ export default function MyProgress() {
           <p className="text-muted-foreground">Track your weekly tasks and deliverables</p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Overall Progress</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">
-                {completedCount} of {weeklyProgress.length} weeks completed
-              </span>
-              <span className="font-medium">{Math.round(progress)}%</span>
-            </div>
-            <Progress value={progress} className="h-3" />
-          </CardContent>
-        </Card>
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Completed Weeks</CardTitle>
+              <Target className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{completedCount}</div>
+              <p className="text-xs text-muted-foreground">of {weeklyProgress.length} total</p>
+              <Progress value={progress} className="h-2 mt-2" />
+            </CardContent>
+          </Card>
 
-        <div className="grid gap-4">
-          {weeklyProgress.map((week) => (
-            <Card key={week.id}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-full bg-primary/10 p-2">
-                      <FileText className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">Week {week.week_number}</CardTitle>
-                      <p className="text-sm text-muted-foreground">{week.week_focus}</p>
-                    </div>
-                  </div>
-                  {getStatusBadge(week.status)}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {week.tasks && (
-                  <div>
-                    <p className="text-sm font-medium">Tasks:</p>
-                    <p className="text-sm text-muted-foreground">{week.tasks}</p>
-                  </div>
-                )}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Self Assessment Avg</CardTitle>
+              <TrendingUp className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{avgSelfScore.toFixed(1)}/10</div>
+              <p className="text-xs text-muted-foreground">Your average score</p>
+            </CardContent>
+          </Card>
 
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="font-medium">Self Assessment:</p>
-                    <p className="text-muted-foreground">
-                      {week.self_assessment_score ? `${week.self_assessment_score}/10` : 'Not submitted'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-medium">Supervisor Score:</p>
-                    <p className="text-muted-foreground">
-                      {week.score_approved && week.supervisor_score
-                        ? `${week.supervisor_score}/10`
-                        : 'Pending'}
-                    </p>
-                  </div>
-                </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Supervisor Score Avg</CardTitle>
+              <Award className="h-4 w-4 text-purple-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{avgSupervisorScore.toFixed(1)}/10</div>
+              <p className="text-xs text-muted-foreground">Supervisor's average</p>
+            </CardContent>
+          </Card>
+        </div>
 
-                {!week.self_assessment_score && (
-                  <div className="space-y-3 border-t pt-4">
-                    <Label>Submit Self-Assessment</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="10"
-                        step="0.1"
-                        placeholder="Score (0-10)"
-                        value={selectedWeek?.id === week.id ? selfAssessment.score : ''}
-                        onChange={(e) => {
-                          setSelectedWeek(week);
-                          setSelfAssessment({ ...selfAssessment, score: e.target.value });
-                        }}
-                        className="w-32"
-                      />
-                      <Textarea
-                        placeholder="Add notes (optional)"
-                        value={selectedWeek?.id === week.id ? selfAssessment.notes : ''}
-                        onChange={(e) => {
-                          setSelectedWeek(week);
-                          setSelfAssessment({ ...selfAssessment, notes: e.target.value });
-                        }}
-                        rows={1}
-                        className="flex-1"
-                      />
-                      <Button onClick={handleSelfAssessment} disabled={selectedWeek?.id !== week.id || !selfAssessment.score}>
-                        Submit
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {week.supervisor_notes && week.score_approved && (
-                  <div className="border-t pt-4">
-                    <p className="text-sm font-medium">Supervisor Feedback:</p>
-                    <p className="text-sm text-muted-foreground">{week.supervisor_notes}</p>
-                  </div>
-                )}
+        <div className="space-y-4">
+          {weeklyProgress.length === 0 ? (
+            <Card>
+              <CardContent className="py-10">
+                <p className="text-center text-muted-foreground">No progress records found</p>
               </CardContent>
             </Card>
-          ))}
+          ) : (
+            weeklyProgress.map((week) => (
+              <WeekProgressCard
+                key={week.id}
+                weekProgress={week}
+                student={student}
+                isStudentView={true}
+                onUpdate={fetchData}
+              />
+            ))
+          )}
         </div>
       </div>
     </DashboardLayout>

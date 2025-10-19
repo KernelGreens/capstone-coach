@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Students from "./pages/Students";
 import Tracks from "./pages/Tracks";
 import Projects from "./pages/Projects";
+import Progress from "./pages/Progress";
 import MyProgress from "./pages/MyProgress";
 import Evaluations from "./pages/Evaluations";
 import Meetings from "./pages/Meetings";
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/students" element={<ProtectedRoute allowedRoles={['supervisor']}><Students /></ProtectedRoute>} />
             <Route path="/tracks" element={<ProtectedRoute allowedRoles={['supervisor']}><Tracks /></ProtectedRoute>} />
             <Route path="/projects" element={<ProtectedRoute allowedRoles={['supervisor']}><Projects /></ProtectedRoute>} />
+            <Route path="/progress" element={<ProtectedRoute allowedRoles={['supervisor']}><Progress /></ProtectedRoute>} />
             <Route path="/evaluations" element={<ProtectedRoute allowedRoles={['supervisor']}><Evaluations /></ProtectedRoute>} />
             <Route path="/meetings" element={<ProtectedRoute><Meetings /></ProtectedRoute>} />
             <Route path="/resources" element={<ProtectedRoute><Resources /></ProtectedRoute>} />

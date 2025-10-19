@@ -31,6 +31,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { href: '/students', label: 'Students', icon: Users },
     { href: '/tracks', label: 'Tracks', icon: Target },
     { href: '/projects', label: 'Projects', icon: BookOpen },
+    { href: '/progress', label: 'Progress', icon: FileText },
     { href: '/evaluations', label: 'Evaluations', icon: BarChart3 },
     { href: '/meetings', label: 'Meetings', icon: Calendar },
     { href: '/resources', label: 'Resources', icon: Library },
