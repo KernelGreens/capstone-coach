@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { WeekProgressCard } from '@/components/progress/WeekProgressCard';
+import { InitializeWeeksDialog } from '@/components/progress/InitializeWeeksDialog';
 import { Users, TrendingUp, CheckCircle2, Clock } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -106,9 +107,19 @@ export default function Progress() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Progress Management</h1>
-          <p className="text-muted-foreground">Review and manage student weekly progress</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Progress Management</h1>
+            <p className="text-muted-foreground">Review and manage student weekly progress</p>
+          </div>
+          {selectedStudent && weeklyProgress.length === 0 && (
+            <InitializeWeeksDialog
+              studentId={selectedStudent.id}
+              startDate={selectedStudent.start_date}
+              endDate={selectedStudent.end_date}
+              onSuccess={fetchWeeklyProgress}
+            />
+          )}
         </div>
 
         <div className="grid gap-4 md:grid-cols-4">
