@@ -136,7 +136,7 @@ serve(async (req) => {
               <p><strong>Important:</strong> Please change your password after your first login for security.</p>
               
               <center>
-                <a href="${window.location.origin || 'https://your-app-url.com'}/auth" class="button">
+                <a href="${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.lovable.app') || 'https://your-app-url.com'}/auth" class="button">
                   Login to Platform
                 </a>
               </center>
