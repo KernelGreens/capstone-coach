@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
 import { FileText, Upload, MessageSquare, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { DeliverablesSection } from './DeliverablesSection';
+import { validateFile, getAcceptString, formatFileSize, MAX_FILE_SIZE } from '@/lib/fileValidation';
 
 interface WeekProgressCardProps {
   weekProgress: any;
@@ -47,8 +47,17 @@ export function WeekProgressCard({ weekProgress, student, isStudentView, onUpdat
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Validate file
+    const validation = validateFile(file);
+    if (!validation.valid) {
+      toast({
+        variant: 'destructive',
+        title: 'Invalid File',
+        description: validation.error,
+      });
+      return;
+    }
     setUploading(true);
-    try {
       const fileExt = file.name.split('.').pop();
       const filePath = `${student.id}/${weekProgress.week_number}/${Date.now()}.${fileExt}`;
 

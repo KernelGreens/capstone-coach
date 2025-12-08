@@ -1,50 +1,69 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Clock, MapPin, Video, Plus } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { MeetingDialog } from '@/components/meetings/MeetingDialog';
+import {
+  Loader2,
+  Plus,
+  Calendar,
+  Clock,
+  MapPin,
+  Video,
+  Pencil,
+  Trash2,
+  User,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface Meeting {
   id: string;
   title: string;
+  student_id: string;
+  supervisor_id: string;
   scheduled_at: string;
   duration_minutes: number;
-  location: string;
-  meeting_link: string;
+  location: string | null;
+  meeting_link: string | null;
+  description: string | null;
   status: string;
-  description: string;
-  notes: string;
-  students: {
-    user_id: string;
-  };
   student_profile?: {
     full_name: string;
   };
 }
 
+interface Student {
+  id: string;
+  user_id: string;
+  profiles: {
+    full_name: string;
+  };
+}
+
 export default function Meetings() {
-  const { userRole, user } = useAuth();
+  const { user, userRole } = useAuth();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [students, setStudents] = useState<any[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    student_id: '',
-    title: '',
-    scheduled_at: '',
-    duration_minutes: 60,
-    location: '',
-    meeting_link: '',
-    description: '',
-  });
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingMeeting, setEditingMeeting] = useState<Meeting | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [meetingToDelete, setMeetingToDelete] = useState<Meeting | null>(null);
+  const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -55,84 +74,147 @@ export default function Meetings() {
   }, [userRole]);
 
   const fetchMeetings = async () => {
+    setLoading(true);
+    
     const { data, error } = await supabase
       .from('meetings')
-      .select(`
-        *,
-        students!inner(user_id)
-      `)
+      .select('*')
       .order('scheduled_at', { ascending: true });
 
-    if (!error && data) {
-      // Fetch profiles separately
-      const userIds = data.map((m: any) => m.students.user_id);
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .in('id', userIds);
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch meetings',
+        variant: 'destructive',
+      });
+    } else if (data) {
+      // Fetch student profiles
+      const studentIds = [...new Set(data.map((m) => m.student_id))];
+      const { data: studentsData } = await supabase
+        .from('students')
+        .select('id, user_id')
+        .in('id', studentIds);
 
-      const enrichedData = data.map((m: any) => ({
-        ...m,
-        student_profile: profiles?.find((prof) => prof.id === m.students.user_id),
-      }));
+      if (studentsData) {
+        const userIds = studentsData.map((s) => s.user_id);
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', userIds);
 
-      setMeetings(enrichedData || []);
+        const enrichedMeetings = data.map((m) => {
+          const student = studentsData.find((s) => s.id === m.student_id);
+          const profile = profiles?.find((p) => p.id === student?.user_id);
+          return {
+            ...m,
+            student_profile: profile ? { full_name: profile.full_name } : undefined,
+          };
+        });
+
+        setMeetings(enrichedMeetings);
+      } else {
+        setMeetings(data);
+      }
     }
+    setLoading(false);
   };
 
   const fetchStudents = async () => {
     const { data } = await supabase
       .from('students')
-      .select('id, profiles!inner(full_name)');
-    if (data) setStudents(data);
+      .select('id, user_id, profiles:user_id(full_name)')
+      .eq('status', 'active');
+
+    if (data) {
+      setStudents(data as any);
+    }
   };
 
-  const handleCreateMeeting = async () => {
-    if (!formData.student_id || !formData.title || !formData.scheduled_at) {
+  const handleSave = async (formData: any) => {
+    if (!user) return;
+    setSaving(true);
+
+    try {
+      if (editingMeeting) {
+        // Update existing meeting
+        const { error } = await supabase
+          .from('meetings')
+          .update({
+            ...formData,
+            scheduled_at: new Date(formData.scheduled_at).toISOString(),
+          })
+          .eq('id', editingMeeting.id);
+
+        if (error) throw error;
+
+        toast({
+          title: 'Success',
+          description: 'Meeting updated successfully',
+        });
+      } else {
+        // Create new meeting
+        const { error } = await supabase.from('meetings').insert({
+          ...formData,
+          supervisor_id: user.id,
+          scheduled_at: new Date(formData.scheduled_at).toISOString(),
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: 'Success',
+          description: 'Meeting scheduled successfully',
+        });
+      }
+
+      setDialogOpen(false);
+      setEditingMeeting(null);
+      fetchMeetings();
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Please fill in all required fields',
+        description: error.message || 'Failed to save meeting',
         variant: 'destructive',
       });
-      return;
+    } finally {
+      setSaving(false);
     }
+  };
 
-    const { data: supervisorData } = await supabase
-      .from('user_roles')
-      .select('user_id')
-      .eq('user_id', user?.id)
-      .eq('role', 'supervisor')
-      .single();
+  const handleEdit = (meeting: Meeting) => {
+    setEditingMeeting(meeting);
+    setDialogOpen(true);
+  };
 
-    const { error } = await supabase.from('meetings').insert({
-      ...formData,
-      supervisor_id: supervisorData?.user_id,
-      status: 'scheduled',
-    });
+  const handleDeleteClick = (meeting: Meeting) => {
+    setMeetingToDelete(meeting);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!meetingToDelete) return;
+
+    const { error } = await supabase
+      .from('meetings')
+      .delete()
+      .eq('id', meetingToDelete.id);
 
     if (error) {
       toast({
         title: 'Error',
-        description: 'Failed to create meeting',
+        description: 'Failed to delete meeting',
         variant: 'destructive',
       });
     } else {
       toast({
         title: 'Success',
-        description: 'Meeting scheduled successfully',
-      });
-      setIsDialogOpen(false);
-      setFormData({
-        student_id: '',
-        title: '',
-        scheduled_at: '',
-        duration_minutes: 60,
-        location: '',
-        meeting_link: '',
-        description: '',
+        description: 'Meeting deleted successfully',
       });
       fetchMeetings();
     }
+
+    setDeleteDialogOpen(false);
+    setMeetingToDelete(null);
   };
 
   const getStatusColor = (status: string) => {
@@ -148,155 +230,166 @@ export default function Meetings() {
     }
   };
 
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Meetings</h1>
-            <p className="text-muted-foreground">Manage mentor-intern meetings</p>
+            <p className="text-muted-foreground">
+              {userRole === 'supervisor'
+                ? 'Schedule and manage meetings with students'
+                : 'View your scheduled meetings'}
+            </p>
           </div>
           {userRole === 'supervisor' && (
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Schedule Meeting
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Schedule New Meeting</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="student_id">Student</Label>
-                    <Select
-                      value={formData.student_id}
-                      onValueChange={(value) => setFormData({ ...formData, student_id: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select student" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {students.map((student) => (
-                          <SelectItem key={student.id} value={student.id}>
-                            {student.profiles.full_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="title">Meeting Title</Label>
-                    <Input
-                      id="title"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      placeholder="Weekly check-in"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="scheduled_at">Date & Time</Label>
-                      <Input
-                        id="scheduled_at"
-                        type="datetime-local"
-                        value={formData.scheduled_at}
-                        onChange={(e) => setFormData({ ...formData, scheduled_at: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="duration_minutes">Duration (minutes)</Label>
-                      <Input
-                        id="duration_minutes"
-                        type="number"
-                        value={formData.duration_minutes}
-                        onChange={(e) => setFormData({ ...formData, duration_minutes: parseInt(e.target.value) })}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="location">Location</Label>
-                    <Input
-                      id="location"
-                      value={formData.location}
-                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                      placeholder="Office, Room 203"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="meeting_link">Video Meeting Link</Label>
-                    <Input
-                      id="meeting_link"
-                      value={formData.meeting_link}
-                      onChange={(e) => setFormData({ ...formData, meeting_link: e.target.value })}
-                      placeholder="https://meet.google.com/..."
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Agenda and topics to discuss"
-                      rows={3}
-                    />
-                  </div>
-                  <Button onClick={handleCreateMeeting} className="w-full">
-                    Schedule Meeting
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => setDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Schedule Meeting
+            </Button>
           )}
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {meetings.map((meeting) => (
-            <Card key={meeting.id}>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">{meeting.title}</CardTitle>
-                  <Badge className={getStatusColor(meeting.status)}>
-                    {meeting.status}
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">{meeting.student_profile?.full_name || 'Student'}</p>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>{new Date(meeting.scheduled_at).toLocaleDateString()}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span>
-                    {new Date(meeting.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({meeting.duration_minutes} min)
-                  </span>
-                </div>
-                {meeting.location && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>{meeting.location}</span>
+        {meetings.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium">No Meetings Scheduled</h3>
+              <p className="text-muted-foreground text-center mt-2">
+                {userRole === 'supervisor'
+                  ? 'Start by scheduling a meeting with a student'
+                  : 'You have no upcoming meetings'}
+              </p>
+              {userRole === 'supervisor' && (
+                <Button className="mt-4" onClick={() => setDialogOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Schedule First Meeting
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {meetings.map((meeting) => (
+              <Card key={meeting.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader className="pb-3">
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="text-lg">{meeting.title}</CardTitle>
+                    <Badge className={getStatusColor(meeting.status)}>
+                      {meeting.status}
+                    </Badge>
                   </div>
-                )}
-                {meeting.meeting_link && (
+                </CardHeader>
+                <CardContent className="space-y-3">
                   <div className="flex items-center gap-2 text-sm">
-                    <Video className="h-4 w-4 text-muted-foreground" />
-                    <a href={meeting.meeting_link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                      Join Meeting
-                    </a>
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span>{meeting.student_profile?.full_name || 'Student'}</span>
                   </div>
-                )}
-                {meeting.description && (
-                  <p className="text-sm text-muted-foreground mt-2">{meeting.description}</p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span>{format(new Date(meeting.scheduled_at), 'PPP')}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span>
+                      {format(new Date(meeting.scheduled_at), 'p')} ({meeting.duration_minutes} min)
+                    </span>
+                  </div>
+                  {meeting.location && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <span>{meeting.location}</span>
+                    </div>
+                  )}
+                  {meeting.meeting_link && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Video className="h-4 w-4 text-muted-foreground" />
+                      <a
+                        href={meeting.meeting_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline"
+                      >
+                        Join Video Call
+                      </a>
+                    </div>
+                  )}
+                  {meeting.description && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {meeting.description}
+                    </p>
+                  )}
+                  {userRole === 'supervisor' && (
+                    <div className="flex gap-2 pt-3 border-t">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => handleEdit(meeting)}
+                      >
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => handleDeleteClick(meeting)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {userRole === 'supervisor' && (
+          <MeetingDialog
+            open={dialogOpen}
+            onOpenChange={(open) => {
+              setDialogOpen(open);
+              if (!open) setEditingMeeting(null);
+            }}
+            meeting={editingMeeting}
+            students={students}
+            onSave={handleSave}
+            saving={saving}
+          />
+        )}
+
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Meeting</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{meetingToDelete?.title}"? This action cannot be
+                undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );

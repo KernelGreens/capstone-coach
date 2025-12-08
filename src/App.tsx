@@ -17,6 +17,8 @@ import Evaluations from "./pages/Evaluations";
 import Meetings from "./pages/Meetings";
 import Resources from "./pages/Resources";
 import Setup from "./pages/Setup";
+import Settings from "./pages/Settings";
+import EvaluationCriteria from "./pages/EvaluationCriteria";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,17 +32,19 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/setup" element={<Setup />} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/setup" element={<Setup />} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/students" element={<ProtectedRoute allowedRoles={['supervisor']}><Students /></ProtectedRoute>} />
             <Route path="/tracks" element={<ProtectedRoute allowedRoles={['supervisor']}><Tracks /></ProtectedRoute>} />
             <Route path="/projects" element={<ProtectedRoute allowedRoles={['supervisor']}><Projects /></ProtectedRoute>} />
             <Route path="/progress" element={<ProtectedRoute allowedRoles={['supervisor']}><Progress /></ProtectedRoute>} />
             <Route path="/evaluations" element={<ProtectedRoute allowedRoles={['supervisor']}><Evaluations /></ProtectedRoute>} />
+            <Route path="/evaluation-criteria" element={<ProtectedRoute allowedRoles={['supervisor']}><EvaluationCriteria /></ProtectedRoute>} />
             <Route path="/meetings" element={<ProtectedRoute><Meetings /></ProtectedRoute>} />
             <Route path="/resources" element={<ProtectedRoute><Resources /></ProtectedRoute>} />
             <Route path="/my-progress" element={<ProtectedRoute allowedRoles={['student']}><MyProgress /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
