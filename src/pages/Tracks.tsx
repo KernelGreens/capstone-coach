@@ -11,7 +11,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Target, Edit2, Trash2, Loader2, Search, Users, BookOpen } from 'lucide-react';
+import { Plus, Target, Edit2, Trash2, Loader2, Search, Users, BookOpen, Sparkles } from 'lucide-react';
+import { CurriculumGeneratorDialog } from '@/components/tracks/CurriculumGeneratorDialog';
 
 export default function Tracks() {
   const { user } = useAuth();
@@ -25,6 +26,8 @@ export default function Tracks() {
   const [editingTrack, setEditingTrack] = useState<any>(null);
   const [selectedTrack, setSelectedTrack] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [curriculumOpen, setCurriculumOpen] = useState(false);
+  const [curriculumTrack, setCurriculumTrack] = useState<any>(null);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -171,6 +174,11 @@ export default function Tracks() {
   const openViewDialog = (track: any) => {
     setSelectedTrack(track);
     setViewOpen(true);
+  };
+
+  const openCurriculumGenerator = (track: any) => {
+    setCurriculumTrack(track);
+    setCurriculumOpen(true);
   };
 
   return (
@@ -363,6 +371,17 @@ export default function Tracks() {
               </div>
 
               <div className="flex gap-2">
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    setViewOpen(false);
+                    openCurriculumGenerator(selectedTrack);
+                  }}
+                  className="flex-1"
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  AI Curriculum
+                </Button>
                 <Button onClick={() => {
                   setViewOpen(false);
                   openEditDialog(selectedTrack);
@@ -405,6 +424,18 @@ export default function Tracks() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* AI Curriculum Generator Dialog */}
+        {curriculumTrack && (
+          <CurriculumGeneratorDialog
+            open={curriculumOpen}
+            onOpenChange={setCurriculumOpen}
+            trackId={curriculumTrack.id}
+            trackName={curriculumTrack.name}
+            trackDescription={curriculumTrack.description || ''}
+            onSaved={fetchTracks}
+          />
+        )}
       </div>
     </DashboardLayout>
   );
