@@ -58,6 +58,7 @@ export function WeekProgressCard({ weekProgress, student, isStudentView, onUpdat
       return;
     }
     setUploading(true);
+    try {
       const fileExt = file.name.split('.').pop();
       const filePath = `${student.id}/${weekProgress.week_number}/${Date.now()}.${fileExt}`;
 
