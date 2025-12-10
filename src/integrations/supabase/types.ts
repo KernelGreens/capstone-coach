@@ -513,6 +513,7 @@ export type Database = {
           created_at: string
           deliverables_submitted: boolean | null
           id: string
+          project_id: string | null
           score_approved: boolean | null
           score_approved_at: string | null
           self_assessment_notes: string | null
@@ -530,6 +531,7 @@ export type Database = {
           created_at?: string
           deliverables_submitted?: boolean | null
           id?: string
+          project_id?: string | null
           score_approved?: boolean | null
           score_approved_at?: string | null
           self_assessment_notes?: string | null
@@ -547,6 +549,7 @@ export type Database = {
           created_at?: string
           deliverables_submitted?: boolean | null
           id?: string
+          project_id?: string | null
           score_approved?: boolean | null
           score_approved_at?: string | null
           self_assessment_notes?: string | null
@@ -561,6 +564,13 @@ export type Database = {
           week_number?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "weekly_progress_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "weekly_progress_student_id_fkey"
             columns: ["student_id"]

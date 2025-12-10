@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -15,9 +15,32 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Check for password recovery event
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setShowResetPassword(true);
+      } else if (event === 'SIGNED_IN' && session && !showResetPassword) {
+        navigate('/dashboard');
+      }
+    });
+
+    // Check URL hash for recovery token (fallback)
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get('type');
+    if (type === 'recovery') {
+      setShowResetPassword(true);
+    }
+
+    return () => subscription.unsubscribe();
+  }, [navigate, showResetPassword]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,6 +133,57 @@ export default function Auth() {
     }
   };
 
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (newPassword !== confirmPassword) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Passwords do not match',
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Password must be at least 6 characters',
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: 'Password updated successfully! You can now log in.',
+      });
+      setShowResetPassword(false);
+      setNewPassword('');
+      setConfirmPassword('');
+      
+      // Sign out and redirect to login
+      await supabase.auth.signOut();
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4">
       <Card className="w-full max-w-md shadow-lg">
@@ -120,10 +194,59 @@ export default function Auth() {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold">Internship Mentorship Platform</CardTitle>
-          <CardDescription>Sign in to track your internship journey</CardDescription>
+          <CardDescription>
+            {showResetPassword 
+              ? 'Set your new password' 
+              : 'Sign in to track your internship journey'}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          {showForgotPassword ? (
+          {showResetPassword ? (
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Set New Password</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Enter your new password below.
+                </p>
+              </div>
+              <form onSubmit={handleUpdatePassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">New Password</Label>
+                  <Input
+                    id="new-password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    minLength={6}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password">Confirm Password</Label>
+                  <Input
+                    id="confirm-password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    minLength={6}
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    'Update Password'
+                  )}
+                </Button>
+              </form>
+            </div>
+          ) : showForgotPassword ? (
             <div className="space-y-4">
               <div>
                 <h3 className="text-lg font-semibold mb-2">Reset Password</h3>
