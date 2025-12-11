@@ -364,6 +364,42 @@ export type Database = {
           },
         ]
       }
+      student_tracks: {
+        Row: {
+          created_at: string
+          id: string
+          student_id: string
+          track_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          student_id: string
+          track_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          student_id?: string
+          track_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_tracks_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_tracks_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           created_at: string
@@ -576,6 +612,53 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekly_resources: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          resource_type: string
+          title: string
+          track_id: string
+          updated_at: string
+          url: string | null
+          week_number: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          resource_type?: string
+          title: string
+          track_id: string
+          updated_at?: string
+          url?: string | null
+          week_number: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          resource_type?: string
+          title?: string
+          track_id?: string
+          updated_at?: string
+          url?: string | null
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_resources_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
             referencedColumns: ["id"]
           },
         ]

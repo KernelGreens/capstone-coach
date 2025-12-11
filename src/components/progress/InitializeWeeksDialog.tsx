@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -9,16 +9,36 @@ import { Loader2, Calendar } from 'lucide-react';
 
 interface InitializeWeeksDialogProps {
   studentId: string;
+  trackId: string | null;
   startDate: string;
   endDate: string;
   onSuccess?: () => void;
 }
 
-export function InitializeWeeksDialog({ studentId, startDate, endDate, onSuccess }: InitializeWeeksDialogProps) {
+export function InitializeWeeksDialog({ studentId, trackId, startDate, endDate, onSuccess }: InitializeWeeksDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [totalWeeks, setTotalWeeks] = useState('');
+  const [projects, setProjects] = useState<any[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (open && trackId) {
+      fetchProjects();
+    }
+  }, [open, trackId]);
+
+  const fetchProjects = async () => {
+    if (!trackId) return;
+    
+    const { data } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('track_id', trackId)
+      .order('week_number', { ascending: true });
+    
+    setProjects(data || []);
+  };
 
   const calculateDefaultWeeks = () => {
     const start = new Date(startDate);
@@ -26,6 +46,24 @@ export function InitializeWeeksDialog({ studentId, startDate, endDate, onSuccess
     const diffTime = Math.abs(end.getTime() - start.getTime());
     const diffWeeks = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7));
     return diffWeeks;
+  };
+
+  const extractTasks = (description: string | null): string => {
+    if (!description) return '';
+    
+    // Try to extract tasks section from description
+    const tasksMatch = description.match(/\*\*Tasks:\*\*\s*([\s\S]*?)(?=\n\n|$)/i);
+    if (tasksMatch) {
+      return tasksMatch[1].trim();
+    }
+    
+    // Also check for numbered tasks pattern
+    const numberedTasks = description.match(/\d+\.\s+[^\n]+/g);
+    if (numberedTasks) {
+      return numberedTasks.join('\n');
+    }
+    
+    return '';
   };
 
   const handleInitialize = async () => {
@@ -44,11 +82,16 @@ export function InitializeWeeksDialog({ studentId, startDate, endDate, onSuccess
       const weekRecords = [];
 
       for (let i = 1; i <= weeks; i++) {
+        // Find matching project for this week
+        const weekProject = projects.find(p => p.week_number === i);
+        
         weekRecords.push({
           student_id: studentId,
           week_number: i,
           status: 'pending',
-          week_focus: `Week ${i}`,
+          week_focus: weekProject?.title || `Week ${i}`,
+          tasks: weekProject ? extractTasks(weekProject.description) : '',
+          project_id: weekProject?.id || null,
         });
       }
 
@@ -60,7 +103,7 @@ export function InitializeWeeksDialog({ studentId, startDate, endDate, onSuccess
 
       toast({
         title: 'Success',
-        description: `Initialized ${weeks} weeks of progress tracking`,
+        description: `Initialized ${weeks} weeks of progress tracking with curriculum tasks`,
       });
 
       setOpen(false);
@@ -89,7 +132,7 @@ export function InitializeWeeksDialog({ studentId, startDate, endDate, onSuccess
         <DialogHeader>
           <DialogTitle>Initialize Weekly Progress</DialogTitle>
           <DialogDescription>
-            Set up weekly progress tracking for this student's entire internship period.
+            Set up weekly progress tracking with curriculum tasks for this student's internship.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -101,6 +144,11 @@ export function InitializeWeeksDialog({ studentId, startDate, endDate, onSuccess
             <p className="text-muted-foreground mt-2">
               Suggested: <span className="font-medium">{calculateDefaultWeeks()} weeks</span>
             </p>
+            {projects.length > 0 && (
+              <p className="text-muted-foreground mt-1">
+                <span className="font-medium">{projects.length}</span> curriculum projects will be linked
+              </p>
+            )}
           </div>
           <div>
             <Label>Number of Weeks</Label>

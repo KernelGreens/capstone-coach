@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { FileText, Upload, MessageSquare, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { FileText, Upload, MessageSquare, CheckCircle2, Clock, AlertCircle, Sparkles, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +25,8 @@ export function WeekProgressCard({ weekProgress, student, isStudentView, onUpdat
   const [selfAssessment, setSelfAssessment] = useState({ score: '', notes: '' });
   const [feedback, setFeedback] = useState({ score: '', notes: '' });
   const [uploading, setUploading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiRecommendation, setAiRecommendation] = useState<any>(null);
   const { toast } = useToast();
 
   const getStatusBadge = (status: string) => {
@@ -169,6 +171,69 @@ export function WeekProgressCard({ weekProgress, student, isStudentView, onUpdat
     }
   };
 
+  const handleAIScoring = async () => {
+    setAiLoading(true);
+    setShowFeedback(true);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // Get deliverables info
+      const { data: deliverables } = await supabase
+        .from('deliverables')
+        .select('file_name, file_type')
+        .eq('weekly_progress_id', weekProgress.id);
+      
+      // Parse self assessment notes
+      let selfNotes = weekProgress.self_assessment_notes;
+      let completedTasks: string[] = [];
+      try {
+        const parsed = JSON.parse(selfNotes);
+        completedTasks = parsed.completedTasks || [];
+        selfNotes = parsed.notes || selfNotes;
+      } catch {}
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-score-recommendation`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session?.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          weekly_progress_id: weekProgress.id,
+          student_name: student.profiles?.full_name || 'Student',
+          week_number: weekProgress.week_number,
+          tasks: weekProgress.tasks || '',
+          completed_tasks: completedTasks.map((i: string) => `Task ${parseInt(i) + 1}`).join(', '),
+          self_assessment_score: weekProgress.self_assessment_score,
+          self_assessment_notes: selfNotes,
+          deliverables: deliverables?.map(d => d.file_name).join(', ') || 'None',
+          project_details: weekProgress.week_focus || ''
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'AI scoring failed');
+      }
+
+      setAiRecommendation(result.evaluation);
+      toast({
+        title: 'AI Analysis Complete',
+        description: 'Review the AI recommendations below',
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'AI Error',
+        description: error.message,
+      });
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -276,12 +341,63 @@ export function WeekProgressCard({ weekProgress, student, isStudentView, onUpdat
         {!isStudentView && weekProgress.self_assessment_score && !weekProgress.score_approved && (
           <div className="border-t pt-4 space-y-3">
             {!showFeedback ? (
-              <Button onClick={() => setShowFeedback(true)} className="w-full" variant="outline">
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Add Feedback
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={() => setShowFeedback(true)} className="flex-1" variant="outline">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Add Feedback
+                </Button>
+                <Button 
+                  onClick={handleAIScoring} 
+                  variant="secondary"
+                  disabled={aiLoading}
+                >
+                  {aiLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      AI Assist
+                    </>
+                  )}
+                </Button>
+              </div>
             ) : (
               <div className="space-y-3">
+                {aiRecommendation && (
+                  <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                      <Sparkles className="h-4 w-4" />
+                      AI Recommendation
+                    </div>
+                    <p className="text-sm">
+                      <strong>Suggested Score:</strong> {aiRecommendation.suggested_score}/10
+                    </p>
+                    <p className="text-xs text-muted-foreground">{aiRecommendation.score_justification}</p>
+                    <div className="text-xs">
+                      <strong>Positive:</strong> {aiRecommendation.positive_highlight}
+                    </div>
+                    <div className="text-xs">
+                      <strong>Recommendations:</strong>
+                      <ul className="list-disc list-inside mt-1">
+                        {aiRecommendation.recommendations?.map((r: string, i: number) => (
+                          <li key={i}>{r}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => {
+                        setFeedback({
+                          score: aiRecommendation.suggested_score.toString(),
+                          notes: `${aiRecommendation.positive_highlight}\n\nRecommendations:\n${aiRecommendation.recommendations?.join('\n- ')}`
+                        });
+                      }}
+                    >
+                      Use AI Suggestion
+                    </Button>
+                  </div>
+                )}
                 <div>
                   <Label>Score (0-10)</Label>
                   <Input
@@ -310,7 +426,7 @@ export function WeekProgressCard({ weekProgress, student, isStudentView, onUpdat
                   <Button variant="destructive" onClick={() => handleSupervisorFeedback(false)}>
                     Request Revision
                   </Button>
-                  <Button variant="outline" onClick={() => setShowFeedback(false)}>
+                  <Button variant="outline" onClick={() => { setShowFeedback(false); setAiRecommendation(null); }}>
                     Cancel
                   </Button>
                 </div>

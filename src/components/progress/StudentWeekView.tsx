@@ -45,6 +45,15 @@ export function StudentWeekView({ weekProgress, project, student, onUpdate }: St
     }
   }, [weekProgress]);
 
+  const extractTasksFromProject = (project: any): string => {
+    if (!project?.description) return '';
+    const tasksMatch = project.description.match(/\*\*Tasks:\*\*\s*([\s\S]*?)(?=\n\n|$)/i);
+    if (tasksMatch) return tasksMatch[1].trim();
+    const numberedTasks = project.description.match(/\d+\.\s+[^\n]+/g);
+    if (numberedTasks) return numberedTasks.join('\n');
+    return '';
+  };
+
   const getStatusConfig = (status: string) => {
     const configs: Record<string, { variant: any; icon: any; label: string; color: string }> = {
       pending: { variant: 'secondary', icon: Clock, label: 'Not Started', color: 'text-muted-foreground' },
@@ -195,7 +204,11 @@ export function StudentWeekView({ weekProgress, project, student, onUpdate }: St
         </TabsList>
 
         <TabsContent value="curriculum" className="space-y-4">
-          <CurriculumCard project={project} />
+          <CurriculumCard 
+            project={project} 
+            trackId={student?.track_id}
+            weekNumber={weekProgress.week_number}
+          />
         </TabsContent>
 
         <TabsContent value="tasks" className="space-y-4">
@@ -205,7 +218,7 @@ export function StudentWeekView({ weekProgress, project, student, onUpdate }: St
             </CardHeader>
             <CardContent>
               <TaskChecklist
-                tasks={weekProgress.tasks || ''}
+                tasks={weekProgress.tasks || extractTasksFromProject(project)}
                 completedTasks={completedTasks}
                 onTaskToggle={handleTaskToggle}
                 disabled={weekProgress.status === 'completed'}

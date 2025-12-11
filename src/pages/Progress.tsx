@@ -115,6 +115,7 @@ export default function Progress() {
           {selectedStudent && weeklyProgress.length === 0 && (
             <InitializeWeeksDialog
               studentId={selectedStudent.id}
+              trackId={selectedStudent.track_id}
               startDate={selectedStudent.start_date}
               endDate={selectedStudent.end_date}
               onSuccess={fetchWeeklyProgress}

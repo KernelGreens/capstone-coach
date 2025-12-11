@@ -1,12 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, Target, Wrench, FileCheck } from 'lucide-react';
+import { WeeklyResourcesSection } from './WeeklyResourcesSection';
 
 interface CurriculumCardProps {
   project: any;
+  trackId?: string;
+  weekNumber?: number;
+  canEditResources?: boolean;
 }
 
-export function CurriculumCard({ project }: CurriculumCardProps) {
+export function CurriculumCard({ project, trackId, weekNumber, canEditResources = false }: CurriculumCardProps) {
   if (!project) {
     return (
       <Card className="bg-muted/30">
@@ -14,6 +18,15 @@ export function CurriculumCard({ project }: CurriculumCardProps) {
           <p className="text-center text-muted-foreground">
             No curriculum assigned for this week
           </p>
+          {trackId && weekNumber && (
+            <div className="mt-4">
+              <WeeklyResourcesSection 
+                trackId={trackId} 
+                weekNumber={weekNumber} 
+                canEdit={canEditResources} 
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
     );
@@ -78,6 +91,16 @@ export function CurriculumCard({ project }: CurriculumCardProps) {
                 </Badge>
               ))}
             </div>
+          </div>
+        )}
+
+        {trackId && weekNumber && (
+          <div className="border-t pt-4 mt-4">
+            <WeeklyResourcesSection 
+              trackId={trackId} 
+              weekNumber={weekNumber} 
+              canEdit={canEditResources} 
+            />
           </div>
         )}
       </CardContent>
