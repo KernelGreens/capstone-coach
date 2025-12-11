@@ -7,14 +7,20 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const resend = new Resend.Resend(Deno.env.get('RESEND_API_KEY'));
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    if (!resendApiKey) {
+      console.error('RESEND_API_KEY is not configured');
+      throw new Error('Email service is not configured');
+    }
+    
+    const resend = new Resend.Resend(resendApiKey);
+    
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -26,6 +32,7 @@ serve(async (req) => {
     
     const { data: { user: supervisor } } = await supabaseAdmin.auth.getUser(token);
     if (!supervisor) {
+      console.error('No authenticated user found');
       throw new Error('Unauthorized');
     }
 
@@ -38,10 +45,12 @@ serve(async (req) => {
       .single();
 
     if (!roleCheck) {
+      console.error('User is not a supervisor:', supervisor.id);
       throw new Error('Only supervisors can invite students');
     }
 
     const { email, full_name, track_id, start_date, end_date } = await req.json();
+    console.log('Inviting student:', { email, full_name, track_id });
 
     // Generate temporary password
     const tempPassword = crypto.randomUUID().slice(0, 12);
@@ -54,13 +63,22 @@ serve(async (req) => {
       user_metadata: { full_name },
     });
 
-    if (authError) throw authError;
+    if (authError) {
+      console.error('Auth error creating user:', authError);
+      throw authError;
+    }
+
+    console.log('User created:', authData.user.id);
 
     // Create student role
-    await supabaseAdmin.from('user_roles').insert({
+    const { error: roleError } = await supabaseAdmin.from('user_roles').insert({
       user_id: authData.user.id,
       role: 'student',
     });
+
+    if (roleError) {
+      console.error('Error creating role:', roleError);
+    }
 
     // Create student record
     const { data: studentData, error: studentError } = await supabaseAdmin
@@ -76,7 +94,22 @@ serve(async (req) => {
       .select()
       .single();
 
-    if (studentError) throw studentError;
+    if (studentError) {
+      console.error('Error creating student record:', studentError);
+      throw studentError;
+    }
+
+    console.log('Student record created:', studentData.id);
+
+    // Also add to student_tracks junction table for multi-track support
+    const { error: trackError } = await supabaseAdmin.from('student_tracks').insert({
+      student_id: studentData.id,
+      track_id,
+    });
+
+    if (trackError) {
+      console.error('Error adding student track:', trackError);
+    }
 
     // Get supervisor profile
     const { data: supervisorProfile } = await supabaseAdmin
@@ -92,7 +125,10 @@ serve(async (req) => {
       .eq('id', track_id)
       .single();
 
-    const loginUrl = `${Deno.env.get('SUPABASE_URL')?.replace('/v1', '')}/auth/v1/verify`;
+    // Get app URL from environment or construct it
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+    const projectRef = supabaseUrl.match(/https:\/\/([^.]+)/)?.[1] || '';
+    const appUrl = `https://${projectRef}.lovable.app`;
 
     // Send invitation email
     const emailHtml = `
@@ -136,7 +172,7 @@ serve(async (req) => {
               <p><strong>Important:</strong> Please change your password after your first login for security.</p>
               
               <center>
-                <a href="${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.lovable.app') || 'https://your-app-url.com'}/auth" class="button">
+                <a href="${appUrl}/auth" class="button">
                   Login to Platform
                 </a>
               </center>
@@ -152,7 +188,8 @@ serve(async (req) => {
     `;
 
     // Send email via Resend
-    const { error: emailError } = await resend.emails.send({
+    console.log('Attempting to send email to:', email);
+    const { data: emailData, error: emailError } = await resend.emails.send({
       from: 'Internship Platform <onboarding@resend.dev>',
       to: [email],
       subject: '🎓 Welcome to Internship Mentorship Platform',
@@ -160,19 +197,27 @@ serve(async (req) => {
     });
 
     if (emailError) {
-      console.error('Email sending error:', emailError);
-      // Don't fail the request if email fails, just log it
+      console.error('Email sending error:', JSON.stringify(emailError));
+      // Note: Resend's free tier with onboarding@resend.dev only sends to the verified email
+      // For production, a custom domain needs to be configured
+    } else {
+      console.log('Email sent successfully:', emailData);
     }
 
     console.log(`Student invited successfully: ${email}`);
 
     return new Response(
-      JSON.stringify({ success: true, student: studentData }),
+      JSON.stringify({ 
+        success: true, 
+        student: studentData,
+        emailSent: !emailError,
+        emailNote: emailError ? 'Email may not be delivered. Resend free tier only sends to verified emails.' : null
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'An error occurred';
-    console.error('Invitation error:', message);
+    console.error('Invitation error:', message, error);
     return new Response(
       JSON.stringify({ error: message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }

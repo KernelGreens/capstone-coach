@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.generate-curriculum]
 verify_jwt = false
+
+[functions.ai-score-recommendation]
+verify_jwt = true
