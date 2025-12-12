@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
+import { MultiTrackManager } from '@/components/students/MultiTrackManager';
 
 export default function Students() {
   const [students, setStudents] = useState<any[]>([]);
@@ -627,19 +628,28 @@ export default function Students() {
 
         {/* Edit Dialog */}
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
-          <DialogContent>
+          <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Edit Student</DialogTitle>
               <DialogDescription>
-                Update student information and track assignment
+                Update student information and track assignments
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <div>
-                <Label>Track</Label>
+              {/* Multi-Track Manager */}
+              {selectedStudent && (
+                <MultiTrackManager
+                  studentId={selectedStudent.id}
+                  tracks={tracks}
+                  onUpdate={fetchData}
+                />
+              )}
+
+              <div className="border-t pt-4">
+                <Label className="text-muted-foreground text-xs">Primary Track (for curriculum)</Label>
                 <Select value={editStudent.track_id} onValueChange={(value) => setEditStudent({ ...editStudent, track_id: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select track" />
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select primary track" />
                   </SelectTrigger>
                   <SelectContent>
                     {tracks.map((track) => (
