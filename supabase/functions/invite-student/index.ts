@@ -190,7 +190,7 @@ serve(async (req) => {
     // Send email via Resend
     console.log('Attempting to send email to:', email);
     const { data: emailData, error: emailError } = await resend.emails.send({
-      from: 'Internship Platform <onboarding@resend.dev>',
+      from: `Internship Platform <${Deno.env.get('RESEND_FROM_EMAIL') || 'onboarding@resend.dev'}>`,
       to: [email],
       subject: '🎓 Welcome to Internship Mentorship Platform',
       html: emailHtml,

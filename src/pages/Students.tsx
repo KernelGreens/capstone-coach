@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Mail, Calendar, Search, Edit, Trash2, Loader2, Eye, Users, GraduationCap, TrendingUp } from 'lucide-react';
+import { Plus, Mail, Calendar, Search, Edit, Trash2, Loader2, Eye, Users, GraduationCap, TrendingUp, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Progress } from '@/components/ui/progress';
@@ -218,6 +218,21 @@ export default function Students() {
         description: error.message,
         variant: 'destructive',
       });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleResendInvitation = async (student: any) => {
+    try {
+      setSubmitting(true);
+      const { data, error } = await supabase.functions.invoke('resend-invitation', {
+        body: { student_id: student.id },
+      });
+      if (error) throw error;
+      toast({ title: 'Success', description: 'Invitation email resent successfully' });
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
@@ -501,7 +516,7 @@ export default function Students() {
                       {new Date(student.start_date).toLocaleDateString()} - {new Date(student.end_date).toLocaleDateString()}
                     </span>
                   </div>
-                  <div className="flex gap-2 pt-2">
+                  <div className="flex flex-wrap gap-2 pt-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -517,6 +532,15 @@ export default function Students() {
                     >
                       <Edit className="h-3 w-3 mr-1" />
                       Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleResendInvitation(student)}
+                      disabled={submitting}
+                    >
+                      <Send className="h-3 w-3 mr-1" />
+                      Resend
                     </Button>
                     <Button
                       variant="outline"
