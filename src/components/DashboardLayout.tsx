@@ -13,7 +13,8 @@ import {
   LogOut,
   GraduationCap,
   Settings,
-  BarChart3
+  BarChart3,
+  MessageSquareHeart
 } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
 import { cn } from '@/lib/utils';
@@ -23,19 +24,24 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { userRole, signOut } = useAuth();
+  const { user, userRole, signOut } = useAuth();
   const location = useLocation();
+
+  const isSuperAdmin = user?.email === 'abiodunahmadaws@gmail.com';
 
   const supervisorLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/students', label: 'Students', icon: Users },
     { href: '/tracks', label: 'Tracks', icon: Target },
     { href: '/projects', label: 'Projects', icon: BookOpen },
-    { href: '/progress', label: 'Progress', icon: FileText },
-    { href: '/evaluations', label: 'Evaluations', icon: BarChart3 },
     { href: '/evaluation-criteria', label: 'Criteria', icon: Target },
+    { href: '/students', label: 'Students', icon: Users },
     { href: '/meetings', label: 'Meetings', icon: Calendar },
+    { href: '/evaluations', label: 'Evaluations', icon: BarChart3 },
+    { href: '/progress', label: 'Progress', icon: FileText },
     { href: '/resources', label: 'Resources', icon: Library },
+    ...(isSuperAdmin
+      ? [{ href: '/feedback', label: 'User Feedback', icon: MessageSquareHeart }]
+      : [{ href: '/submit-feedback', label: 'Feedback', icon: MessageSquareHeart }]),
   ];
 
   const studentLinks = [
@@ -44,6 +50,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { href: '/my-evaluations', label: 'My Evaluations', icon: BarChart3 },
     { href: '/meetings', label: 'Meetings', icon: Calendar },
     { href: '/resources', label: 'Resources', icon: Library },
+    { href: '/submit-feedback', label: 'Feedback', icon: MessageSquareHeart },
   ];
 
   const links = userRole === 'supervisor' ? supervisorLinks : studentLinks;
