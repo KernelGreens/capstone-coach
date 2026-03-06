@@ -19,6 +19,8 @@ import Resources from "./pages/Resources";
 import Setup from "./pages/Setup";
 import Settings from "./pages/Settings";
 import EvaluationCriteria from "./pages/EvaluationCriteria";
+import SubmitFeedback from "./pages/SubmitFeedback";
+import ViewFeedback from "./pages/ViewFeedback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +47,8 @@ const App = () => (
             <Route path="/resources" element={<ProtectedRoute><Resources /></ProtectedRoute>} />
             <Route path="/my-progress" element={<ProtectedRoute allowedRoles={['student']}><MyProgress /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/submit-feedback" element={<ProtectedRoute><SubmitFeedback /></ProtectedRoute>} />
+            <Route path="/feedback" element={<ProtectedRoute allowedRoles={['supervisor']}><ViewFeedback /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
