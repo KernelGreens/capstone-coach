@@ -324,8 +324,8 @@ export default function Meetings() {
                       </a>
                     </div>
                   )}
-                  {meeting.description && (
-                    <p className="text-sm text-muted-foreground mt-2">
+                    {meeting.description && (
+                    <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap">
                       {meeting.description}
                     </p>
                   )}
