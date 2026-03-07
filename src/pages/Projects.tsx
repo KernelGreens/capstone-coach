@@ -10,7 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, BookOpen, Edit, Trash2, Search, Eye, Printer } from 'lucide-react';
+import { Plus, BookOpen, Edit, Trash2, Search, Eye, Printer, Download } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -162,6 +163,41 @@ export default function Projects() {
   const miniProjects = filteredProjects.filter(p => p.project_type?.toLowerCase() === 'mini');
   const capstoneProjects = filteredProjects.filter(p => p.project_type?.toLowerCase() === 'capstone');
 
+  const downloadCSV = () => {
+    const headers = ['Title', 'Track', 'Type', 'Week', 'Description', 'Objectives', 'Deliverables', 'Tools & Technologies'];
+    const rows = filteredProjects.map(p => [
+      p.title,
+      p.tracks?.name || '',
+      p.project_type,
+      p.week_number || '',
+      (p.description || '').replace(/\n/g, ' '),
+      (p.objectives || '').replace(/\n/g, ' '),
+      (p.deliverables || '').replace(/\n/g, ' '),
+      p.tools_technologies || '',
+    ]);
+    const csvContent = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'projects.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadJSON = () => {
+    const data = filteredProjects.map(({ id, title, tracks, project_type, week_number, description, objectives, deliverables, tools_technologies }) => ({
+      title, track: tracks?.name || '', project_type, week_number, description, objectives, deliverables, tools_technologies,
+    }));
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'projects.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -170,11 +206,23 @@ export default function Projects() {
             <h1 className="text-3xl font-bold">Projects Management</h1>
             <p className="text-muted-foreground">Define projects and assignments for each track</p>
           </div>
-          <div className="flex gap-2">
+           <div className="flex gap-2">
             <Button variant="outline" onClick={() => window.print()}>
               <Printer className="mr-2 h-4 w-4" />
               Print
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Download className="mr-2 h-4 w-4" />
+                  Download
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={downloadCSV}>Download as CSV</DropdownMenuItem>
+                <DropdownMenuItem onClick={downloadJSON}>Download as JSON</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           <Dialog open={open} onOpenChange={handleCloseDialog}>
             <DialogTrigger asChild>
               <Button>
