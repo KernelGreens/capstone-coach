@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, BookOpen, Edit, Trash2, Search, Eye } from 'lucide-react';
+import { Plus, BookOpen, Edit, Trash2, Search, Eye, Printer } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -159,17 +159,22 @@ export default function Projects() {
     return matchesSearch && matchesTrack;
   });
 
-  const miniProjects = filteredProjects.filter(p => p.project_type === 'mini');
-  const capstoneProjects = filteredProjects.filter(p => p.project_type === 'capstone');
+  const miniProjects = filteredProjects.filter(p => p.project_type?.toLowerCase() === 'mini');
+  const capstoneProjects = filteredProjects.filter(p => p.project_type?.toLowerCase() === 'capstone');
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between print:hidden" id="projects-header">
           <div>
             <h1 className="text-3xl font-bold">Projects Management</h1>
             <p className="text-muted-foreground">Define projects and assignments for each track</p>
           </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => window.print()}>
+              <Printer className="mr-2 h-4 w-4" />
+              Print
+            </Button>
           <Dialog open={open} onOpenChange={handleCloseDialog}>
             <DialogTrigger asChild>
               <Button>
@@ -269,6 +274,7 @@ export default function Projects() {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4">
