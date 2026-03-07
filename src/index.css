@@ -100,3 +100,31 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@media print {
+  /* Hide sidebar, buttons, dialogs, and non-content elements */
+  aside,
+  .print\\:hidden,
+  button,
+  [role="dialog"],
+  [role="tablist"] {
+    display: none !important;
+  }
+
+  /* Reset layout so content fills the page */
+  main {
+    margin-left: 0 !important;
+    padding: 1rem !important;
+  }
+
+  /* Ensure cards don't break across pages */
+  .card, [class*="Card"] {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+}
