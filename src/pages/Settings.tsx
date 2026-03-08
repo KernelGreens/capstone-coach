@@ -515,6 +515,10 @@ export default function Settings() {
           <TabsContent value="notifications">
             <NotificationsTab />
           </TabsContent>
+
+          <TabsContent value="general">
+            <OnboardingResetCard />
+          </TabsContent>
         </Tabs>
       </div>
     </DashboardLayout>
