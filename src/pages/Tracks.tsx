@@ -452,6 +452,16 @@ export default function Tracks() {
             onSaved={fetchTracks}
           />
         )}
+
+        {curriculumTrack && (
+          <ManualCurriculumDialog
+            open={manualCurriculumOpen}
+            onOpenChange={setManualCurriculumOpen}
+            trackId={curriculumTrack.id}
+            trackName={curriculumTrack.name}
+            onSaved={fetchTracks}
+          />
+        )}
       </div>
     </DashboardLayout>
   );
