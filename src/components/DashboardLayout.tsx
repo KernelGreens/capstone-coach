@@ -26,6 +26,7 @@ import { NotificationBell } from './NotificationBell';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { MobileBottomNav } from './MobileBottomNav';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -157,9 +158,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </Sheet>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 bg-background">
+        <main className="flex-1 p-4 pb-20 bg-background">
           {children}
         </main>
+
+        {/* Mobile Bottom Navigation */}
+        <MobileBottomNav />
       </div>
     );
   }
