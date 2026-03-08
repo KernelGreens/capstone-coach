@@ -57,6 +57,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { href: '/my-progress', label: 'My Progress', icon: FileText },
     { href: '/my-evaluations', label: 'My Evaluations', icon: BarChart3 },
     { href: '/meetings', label: 'Meetings', icon: Calendar },
+    { href: '/messages', label: 'Messages', icon: MessageCircle },
     { href: '/resources', label: 'Resources', icon: Library },
     { href: '/submit-feedback', label: 'Feedback', icon: MessageSquareHeart },
   ];
