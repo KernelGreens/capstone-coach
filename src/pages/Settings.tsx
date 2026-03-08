@@ -509,6 +509,31 @@ export default function Settings() {
                   <p className="text-xs text-muted-foreground">Email cannot be changed</p>
                 </div>
 
+                {/* Timezone Field */}
+                <div className="space-y-2">
+                  <Label htmlFor="timezone" className="flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                    Timezone
+                  </Label>
+                  <Select
+                    value={profile.timezone}
+                    onValueChange={(value) => setProfile((prev) => ({ ...prev, timezone: value }))}
+                  >
+                    <SelectTrigger id="timezone">
+                      <SelectValue placeholder="Select timezone" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-60">
+                      {Intl.supportedValuesOf('timeZone').map((tz) => (
+                        <SelectItem key={tz} value={tz}>
+                          {tz.replace(/_/g, ' ')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Used for morning meeting reminders at ~7 AM your time
+                  </p>
+
                 <Button onClick={handleSaveProfile} disabled={saving}>
                   {saving ? (
                     <>
