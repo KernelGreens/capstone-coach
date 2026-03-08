@@ -16,7 +16,35 @@ import { useBiometricAuth } from '@/hooks/use-biometric-auth';
 import { useOnboarding } from '@/hooks/use-onboarding';
 import { useNavigate } from 'react-router-dom';
 
-function NotificationsTab() {
+function OnboardingResetCard() {
+  const { user, userRole } = useAuth();
+  const { resetOnboarding } = useOnboarding(user?.id, userRole);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Onboarding Tour</CardTitle>
+        <CardDescription>Replay the welcome wizard and guided tour to revisit key features</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Button
+          variant="outline"
+          onClick={() => {
+            resetOnboarding();
+            toast({ title: 'Onboarding reset', description: 'Redirecting to dashboard…' });
+            navigate('/dashboard');
+          }}
+        >
+          <RotateCcw className="mr-2 h-4 w-4" />
+          Replay Onboarding Tour
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
   const { isSupported, isSubscribed, permission, loading, subscribe, unsubscribe } = usePushNotifications();
 
   return (
