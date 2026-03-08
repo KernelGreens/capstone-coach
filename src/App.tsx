@@ -24,6 +24,7 @@ import ViewFeedback from "./pages/ViewFeedback";
 import Messages from "./pages/Messages";
 import Analytics from "./pages/Analytics";
 import Portfolio from "./pages/Portfolio";
+import CapstoneProject from "./pages/CapstoneProject";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
