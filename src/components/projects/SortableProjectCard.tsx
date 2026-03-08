@@ -86,9 +86,14 @@ export function SortableProjectCard({ project, onEdit, onDelete, onView, isDragg
               <Eye className="h-4 w-4 mr-1" />
               View Details
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setLessonsOpen(true)}>
+            <Button variant="outline" size="sm" onClick={() => setLessonsOpen(true)} className="relative">
               <GraduationCap className="h-4 w-4 mr-1" />
               Lessons
+              {lessonCount > 0 && (
+                <Badge className="ml-1.5 h-5 min-w-[20px] px-1.5 text-[10px] leading-none">
+                  {lessonCount}
+                </Badge>
+              )}
             </Button>
             <Button variant="outline" size="sm" onClick={() => onEdit(project)}>
               <Edit className="h-4 w-4 mr-1" />
