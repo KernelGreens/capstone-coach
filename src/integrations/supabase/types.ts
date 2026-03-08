@@ -240,6 +240,48 @@ export type Database = {
           },
         ]
       }
+      company_profiles: {
+        Row: {
+          company_name: string
+          contact_email: string | null
+          created_at: string
+          description: string | null
+          id: string
+          industry: string | null
+          location: string | null
+          logo_url: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          company_name: string
+          contact_email?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          industry?: string | null
+          location?: string | null
+          logo_url?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          company_name?: string
+          contact_email?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          industry?: string | null
+          location?: string | null
+          logo_url?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       conversation_participants: {
         Row: {
           conversation_id: string
@@ -437,6 +479,140 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      internship_applications: {
+        Row: {
+          applicant_id: string
+          applied_at: string
+          cover_letter: string | null
+          decided_at: string | null
+          id: string
+          interviewed_at: string | null
+          listing_id: string
+          portfolio_url: string | null
+          resume_url: string | null
+          reviewed_by: string | null
+          reviewer_notes: string | null
+          shortlisted_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          applicant_id: string
+          applied_at?: string
+          cover_letter?: string | null
+          decided_at?: string | null
+          id?: string
+          interviewed_at?: string | null
+          listing_id: string
+          portfolio_url?: string | null
+          resume_url?: string | null
+          reviewed_by?: string | null
+          reviewer_notes?: string | null
+          shortlisted_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          applicant_id?: string
+          applied_at?: string
+          cover_letter?: string | null
+          decided_at?: string | null
+          id?: string
+          interviewed_at?: string | null
+          listing_id?: string
+          portfolio_url?: string | null
+          resume_url?: string | null
+          reviewed_by?: string | null
+          reviewer_notes?: string | null
+          shortlisted_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internship_applications_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "internship_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      internship_listings: {
+        Row: {
+          application_deadline: string | null
+          company_profile_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          duration_weeks: number | null
+          id: string
+          location: string | null
+          location_type: string
+          max_applicants: number | null
+          requirements: string | null
+          skills_required: string[] | null
+          start_date: string | null
+          status: string
+          title: string
+          track_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          application_deadline?: string | null
+          company_profile_id?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          duration_weeks?: number | null
+          id?: string
+          location?: string | null
+          location_type?: string
+          max_applicants?: number | null
+          requirements?: string | null
+          skills_required?: string[] | null
+          start_date?: string | null
+          status?: string
+          title: string
+          track_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          application_deadline?: string | null
+          company_profile_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          duration_weeks?: number | null
+          id?: string
+          location?: string | null
+          location_type?: string
+          max_applicants?: number | null
+          requirements?: string | null
+          skills_required?: string[] | null
+          start_date?: string | null
+          status?: string
+          title?: string
+          track_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internship_listings_company_profile_id_fkey"
+            columns: ["company_profile_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internship_listings_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       meetings: {
         Row: {
@@ -1325,7 +1501,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "supervisor" | "student"
+      app_role: "supervisor" | "student" | "company"
       conversation_type: "direct" | "group" | "announcement" | "question_thread"
     }
     CompositeTypes: {
@@ -1454,7 +1630,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["supervisor", "student"],
+      app_role: ["supervisor", "student", "company"],
       conversation_type: ["direct", "group", "announcement", "question_thread"],
     },
   },

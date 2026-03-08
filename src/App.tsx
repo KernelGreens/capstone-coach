@@ -25,6 +25,7 @@ import Messages from "./pages/Messages";
 import Analytics from "./pages/Analytics";
 import Portfolio from "./pages/Portfolio";
 import CapstoneProject from "./pages/CapstoneProject";
+import Marketplace from "./pages/Marketplace";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/analytics" element={<ProtectedRoute allowedRoles={['supervisor']}><Analytics /></ProtectedRoute>} />
             <Route path="/portfolio" element={<Portfolio />} />
             <Route path="/capstone" element={<ProtectedRoute><CapstoneProject /></ProtectedRoute>} />
+            <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

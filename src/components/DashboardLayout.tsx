@@ -16,11 +16,12 @@ import {
   BarChart3,
   TrendingUp,
   MessageSquareHeart,
-    MessageCircle,
-    Menu,
-    X,
-    Briefcase,
-    Trophy
+  MessageCircle,
+  Menu,
+  X,
+  Briefcase,
+  Trophy,
+  Store
 } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
 import { cn } from '@/lib/utils';
@@ -53,6 +54,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { href: '/progress', label: 'Progress', icon: FileText },
     { href: '/capstone', label: 'Capstone', icon: Trophy },
     { href: '/resources', label: 'Resources', icon: Library },
+    { href: '/marketplace', label: 'Marketplace', icon: Store },
     ...(isSuperAdmin
       ? [{ href: '/feedback', label: 'User Feedback', icon: MessageSquareHeart }]
       : [{ href: '/submit-feedback', label: 'Feedback', icon: MessageSquareHeart }]),
@@ -67,6 +69,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { href: '/capstone', label: 'Capstone', icon: Trophy },
     { href: '/resources', label: 'Resources', icon: Library },
     { href: '/portfolio', label: 'Portfolio', icon: Briefcase },
+    { href: '/marketplace', label: 'Marketplace', icon: Store },
     { href: '/submit-feedback', label: 'Feedback', icon: MessageSquareHeart },
   ];
 
