@@ -11,6 +11,7 @@ export function MobileBottomNav() {
     { href: '/dashboard', label: 'Home', icon: LayoutDashboard },
     { href: '/my-progress', label: 'Progress', icon: FileText },
     { href: '/messages', label: 'Chat', icon: MessageCircle },
+    { href: '/ai-assistant', label: 'AI', icon: Sparkles },
     { href: '/resources', label: 'Learn', icon: BookOpen },
     { href: '/capstone', label: 'Capstone', icon: BarChart3 },
   ];
