@@ -66,6 +66,7 @@ export default function Meetings() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [meetingToDelete, setMeetingToDelete] = useState<Meeting | null>(null);
   const [saving, setSaving] = useState(false);
+  const [generatingSlides, setGeneratingSlides] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
