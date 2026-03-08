@@ -31,12 +31,6 @@ export default function Portfolio() {
       fetchPortfolioData();
     }
   }, [user, shareToken, studentIdParam, authLoading]);
-
-  // Redirect non-authenticated users without a share token
-  if (!authLoading && !user && !shareToken) {
-    return <Navigate to="/auth" replace />;
-  }
-
   const fetchPortfolioData = async () => {
     setLoading(true);
     try {
