@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { BookOpen, Target, Wrench, FileCheck } from 'lucide-react';
 import { WeeklyResourcesSection } from './WeeklyResourcesSection';
 import { LessonList } from '@/components/lessons/LessonList';
+import { SuggestResourcesButton } from './SuggestResourcesButton';
 
 interface CurriculumCardProps {
   project: any;
@@ -120,6 +121,16 @@ export function CurriculumCard({ project, trackId, weekNumber, canEditResources 
               trackId={trackId} 
               weekNumber={weekNumber} 
               canEdit={canEditResources} 
+            />
+          </div>
+        )}
+
+        {/* AI Resource Suggestions */}
+        {weekNumber && (
+          <div className="border-t pt-4 mt-4">
+            <SuggestResourcesButton
+              project={project}
+              weekNumber={weekNumber}
             />
           </div>
         )}
