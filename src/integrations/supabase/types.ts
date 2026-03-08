@@ -481,6 +481,125 @@ export type Database = {
         }
         Relationships: []
       }
+      portfolio_projects: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          github_stats: Json | null
+          github_url: string | null
+          id: string
+          image_url: string | null
+          portfolio_id: string
+          project_id: string | null
+          technologies: string[] | null
+          title: string
+          updated_at: string
+          week_number: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          github_stats?: Json | null
+          github_url?: string | null
+          id?: string
+          image_url?: string | null
+          portfolio_id: string
+          project_id?: string | null
+          technologies?: string[] | null
+          title: string
+          updated_at?: string
+          week_number?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          github_stats?: Json | null
+          github_url?: string | null
+          id?: string
+          image_url?: string | null
+          portfolio_id?: string
+          project_id?: string | null
+          technologies?: string[] | null
+          title?: string
+          updated_at?: string
+          week_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_projects_portfolio_id_fkey"
+            columns: ["portfolio_id"]
+            isOneToOne: false
+            referencedRelation: "portfolios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_projects_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portfolios: {
+        Row: {
+          bio: string | null
+          certificate_issued: boolean
+          created_at: string
+          github_data: Json | null
+          github_username: string | null
+          graduation_approved: boolean
+          graduation_approved_at: string | null
+          graduation_approved_by: string | null
+          id: string
+          is_public: boolean
+          share_token: string | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          bio?: string | null
+          certificate_issued?: boolean
+          created_at?: string
+          github_data?: Json | null
+          github_username?: string | null
+          graduation_approved?: boolean
+          graduation_approved_at?: string | null
+          graduation_approved_by?: string | null
+          id?: string
+          is_public?: boolean
+          share_token?: string | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          bio?: string | null
+          certificate_issued?: boolean
+          created_at?: string
+          github_data?: Json | null
+          github_username?: string | null
+          graduation_approved?: boolean
+          graduation_approved_at?: string | null
+          graduation_approved_by?: string | null
+          id?: string
+          is_public?: boolean
+          share_token?: string | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolios_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -631,6 +750,47 @@ export type Database = {
             columns: ["track_id"]
             isOneToOne: false
             referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      skill_badges: {
+        Row: {
+          awarded_at: string
+          awarded_by: string | null
+          category: string
+          description: string | null
+          id: string
+          level: string
+          name: string
+          portfolio_id: string
+        }
+        Insert: {
+          awarded_at?: string
+          awarded_by?: string | null
+          category?: string
+          description?: string | null
+          id?: string
+          level?: string
+          name: string
+          portfolio_id: string
+        }
+        Update: {
+          awarded_at?: string
+          awarded_by?: string | null
+          category?: string
+          description?: string | null
+          id?: string
+          level?: string
+          name?: string
+          portfolio_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_badges_portfolio_id_fkey"
+            columns: ["portfolio_id"]
+            isOneToOne: false
+            referencedRelation: "portfolios"
             referencedColumns: ["id"]
           },
         ]

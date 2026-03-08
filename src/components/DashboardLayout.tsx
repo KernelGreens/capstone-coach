@@ -16,9 +16,10 @@ import {
   BarChart3,
   TrendingUp,
   MessageSquareHeart,
-  MessageCircle,
-  Menu,
-  X
+    MessageCircle,
+    Menu,
+    X,
+    Briefcase
 } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
 import { cn } from '@/lib/utils';
@@ -61,6 +62,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { href: '/meetings', label: 'Meetings', icon: Calendar },
     { href: '/messages', label: 'Messages', icon: MessageCircle },
     { href: '/resources', label: 'Resources', icon: Library },
+    { href: '/portfolio', label: 'Portfolio', icon: Briefcase },
     { href: '/submit-feedback', label: 'Feedback', icon: MessageSquareHeart },
   ];
 
