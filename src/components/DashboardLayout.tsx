@@ -158,9 +158,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </Sheet>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 bg-background">
+        <main className="flex-1 p-4 pb-20 bg-background">
           {children}
         </main>
+
+        {/* Mobile Bottom Navigation */}
+        <MobileBottomNav />
       </div>
     );
   }
