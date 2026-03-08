@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { GraduationCap, Loader2 } from 'lucide-react';
+import { GraduationCap, Loader2, Fingerprint } from 'lucide-react';
+import { useBiometricAuth } from '@/hooks/use-biometric-auth';
 
 export default function Auth() {
   const [loading, setLoading] = useState(false);
