@@ -96,6 +96,7 @@ function BiometricSettingsCard() {
   const { isSupported, loading, registerBiometric, getRegisteredCredentials, removeCredential } = useBiometricAuth();
   const [credentials, setCredentials] = useState<any[]>([]);
   const [deviceName, setDeviceName] = useState('');
+  const [showAddDevice, setShowAddDevice] = useState(false);
 
   useEffect(() => {
     loadCredentials();
@@ -106,10 +107,26 @@ function BiometricSettingsCard() {
     setCredentials(creds);
   };
 
+  const biometricEnabled = credentials.length > 0;
+
+  const handleToggle = async (checked: boolean) => {
+    if (checked) {
+      setShowAddDevice(true);
+    } else {
+      // Remove all credentials to disable biometric
+      for (const cred of credentials) {
+        await removeCredential(cred.id);
+      }
+      setCredentials([]);
+      setShowAddDevice(false);
+    }
+  };
+
   const handleRegister = async () => {
     const success = await registerBiometric(deviceName || undefined);
     if (success) {
       setDeviceName('');
+      setShowAddDevice(false);
       await loadCredentials();
     }
   };
@@ -119,79 +136,98 @@ function BiometricSettingsCard() {
     await loadCredentials();
   };
 
-  if (!isSupported) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Fingerprint className="h-5 w-5" />
-            Biometric Sign-In
-          </CardTitle>
-          <CardDescription>Not available on this device/browser</CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
-
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Fingerprint className="h-5 w-5" />
-          Biometric Sign-In
-        </CardTitle>
-        <CardDescription>
-          Use your fingerprint or face to quickly sign back in to your account
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {credentials.length > 0 && (
-          <div className="space-y-3">
-            <Label>Registered Devices</Label>
-            {credentials.map((cred) => (
-              <div key={cred.id} className="flex items-center justify-between p-3 rounded-lg border bg-muted/50">
-                <div className="flex items-center gap-3">
-                  <Smartphone className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">{cred.device_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Added {new Date(cred.created_at).toLocaleDateString()}
-                      {cred.last_used_at && ` · Last used ${new Date(cred.last_used_at).toLocaleDateString()}`}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-destructive hover:text-destructive"
-                  onClick={() => handleRemove(cred.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <CardTitle className="flex items-center gap-2">
+              <Fingerprint className="h-5 w-5" />
+              Biometric Sign-In
+            </CardTitle>
+            <CardDescription>
+              {isSupported
+                ? 'Use fingerprint or face unlock to sign in quickly'
+                : 'Not available on this device/browser'}
+            </CardDescription>
           </div>
-        )}
-
-        <div className="space-y-2">
-          <Label htmlFor="device-name">Device Name (optional)</Label>
-          <Input
-            id="device-name"
-            placeholder="e.g. My iPhone, Work Laptop"
-            value={deviceName}
-            onChange={(e) => setDeviceName(e.target.value)}
-          />
-        </div>
-
-        <Button onClick={handleRegister} disabled={loading} className="gap-2">
-          {loading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Fingerprint className="h-4 w-4" />
+          {isSupported && (
+            <Switch
+              checked={biometricEnabled || showAddDevice}
+              onCheckedChange={handleToggle}
+              disabled={loading}
+            />
           )}
-          {credentials.length > 0 ? 'Add Another Device' : 'Enable Biometric Sign-In'}
-        </Button>
-      </CardContent>
+        </div>
+      </CardHeader>
+
+      {isSupported && (biometricEnabled || showAddDevice) && (
+        <CardContent className="space-y-4">
+          {credentials.length > 0 && (
+            <div className="space-y-3">
+              <Label>Registered Devices</Label>
+              {credentials.map((cred) => (
+                <div key={cred.id} className="flex items-center justify-between p-3 rounded-lg border bg-muted/50">
+                  <div className="flex items-center gap-3">
+                    <Smartphone className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium">{cred.device_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Added {new Date(cred.created_at).toLocaleDateString()}
+                        {cred.last_used_at && ` · Last used ${new Date(cred.last_used_at).toLocaleDateString()}`}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => handleRemove(cred.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {(showAddDevice || credentials.length === 0) && (
+            <div className="space-y-3 rounded-lg border border-dashed p-4">
+              <div className="space-y-2">
+                <Label htmlFor="device-name">Device Name (optional)</Label>
+                <Input
+                  id="device-name"
+                  placeholder="e.g. My iPhone, Work Laptop"
+                  value={deviceName}
+                  onChange={(e) => setDeviceName(e.target.value)}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleRegister} disabled={loading} size="sm" className="gap-2">
+                  {loading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Fingerprint className="h-4 w-4" />
+                  )}
+                  Register Device
+                </Button>
+                {credentials.length > 0 && (
+                  <Button variant="ghost" size="sm" onClick={() => setShowAddDevice(false)}>
+                    Cancel
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {credentials.length > 0 && !showAddDevice && (
+            <Button variant="outline" size="sm" onClick={() => setShowAddDevice(true)} className="gap-2">
+              <Fingerprint className="h-4 w-4" />
+              Add Another Device
+            </Button>
+          )}
+        </CardContent>
+      )}
     </Card>
   );
 }
