@@ -26,6 +26,7 @@ import Analytics from "./pages/Analytics";
 import Portfolio from "./pages/Portfolio";
 import CapstoneProject from "./pages/CapstoneProject";
 import Marketplace from "./pages/Marketplace";
+import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
