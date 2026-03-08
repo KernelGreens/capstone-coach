@@ -254,10 +254,6 @@ export default function Projects() {
             <p className="text-muted-foreground">Define projects and assignments for each track</p>
           </div>
            <div className="flex gap-2">
-            <Button variant="outline" onClick={() => window.print()}>
-              <Printer className="mr-2 h-4 w-4" />
-              Print
-            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
@@ -266,6 +262,14 @@ export default function Projects() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => window.print()}>
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => window.print()}>
+                  <FileDown className="mr-2 h-4 w-4" />
+                  Download as PDF
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={downloadCSV}>Download as CSV</DropdownMenuItem>
                 <DropdownMenuItem onClick={downloadJSON}>Download as JSON</DropdownMenuItem>
               </DropdownMenuContent>
