@@ -21,7 +21,8 @@ import {
   X,
   Briefcase,
   Trophy,
-  Store
+  Store,
+  Crown
 } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
 import { cn } from '@/lib/utils';
