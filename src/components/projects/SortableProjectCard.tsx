@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +19,18 @@ interface SortableProjectCardProps {
 
 export function SortableProjectCard({ project, onEdit, onDelete, onView, isDraggable = false }: SortableProjectCardProps) {
   const [lessonsOpen, setLessonsOpen] = useState(false);
+  const [lessonCount, setLessonCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      const { count } = await supabase
+        .from('lessons')
+        .select('*', { count: 'exact', head: true })
+        .eq('project_id', project.id);
+      setLessonCount(count ?? 0);
+    };
+    fetchCount();
+  }, [project.id, lessonsOpen]);
   const {
     attributes,
     listeners,
@@ -73,9 +86,14 @@ export function SortableProjectCard({ project, onEdit, onDelete, onView, isDragg
               <Eye className="h-4 w-4 mr-1" />
               View Details
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setLessonsOpen(true)}>
+            <Button variant="outline" size="sm" onClick={() => setLessonsOpen(true)} className="relative">
               <GraduationCap className="h-4 w-4 mr-1" />
               Lessons
+              {lessonCount > 0 && (
+                <Badge className="ml-1.5 h-5 min-w-[20px] px-1.5 text-[10px] leading-none">
+                  {lessonCount}
+                </Badge>
+              )}
             </Button>
             <Button variant="outline" size="sm" onClick={() => onEdit(project)}>
               <Edit className="h-4 w-4 mr-1" />
