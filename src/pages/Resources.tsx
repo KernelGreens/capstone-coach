@@ -11,8 +11,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Link as LinkIcon, Video, BookOpen, Plus, Trash2, Calendar } from 'lucide-react';
+import { Link as LinkIcon, Plus, Trash2, Calendar, BookOpen, Play, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { ContentViewer } from '@/components/resources/ContentViewer';
+import { ContentTypeSelect } from '@/components/resources/ContentTypeSelect';
+import { getContentTypeConfig, CONTENT_TYPES } from '@/components/resources/contentTypes';
 
 interface Resource {
   id: string;
@@ -47,6 +50,7 @@ export default function Resources() {
   const [tracks, setTracks] = useState<any[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isWeeklyDialogOpen, setIsWeeklyDialogOpen] = useState(false);
+  const [viewerResource, setViewerResource] = useState<any>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -73,29 +77,17 @@ export default function Resources() {
   const fetchResources = async () => {
     const { data, error } = await supabase
       .from('resources')
-      .select(`
-        *,
-        tracks(name)
-      `)
+      .select(`*, tracks(name)`)
       .order('created_at', { ascending: false });
-
-    if (!error && data) {
-      setResources(data);
-    }
+    if (!error && data) setResources(data);
   };
 
   const fetchWeeklyResources = async () => {
     const { data, error } = await supabase
       .from('weekly_resources')
-      .select(`
-        *,
-        tracks(name)
-      `)
+      .select(`*, tracks(name)`)
       .order('week_number', { ascending: true });
-
-    if (!error && data) {
-      setWeeklyResources(data);
-    }
+    if (!error && data) setWeeklyResources(data);
   };
 
   const fetchTracks = async () => {
@@ -105,52 +97,25 @@ export default function Resources() {
 
   const handleCreateResource = async () => {
     if (!formData.title || !formData.resource_type) {
-      toast({
-        title: 'Error',
-        description: 'Please fill in all required fields',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Please fill in all required fields', variant: 'destructive' });
       return;
     }
-
-    const { error } = await supabase.from('resources').insert({
-      ...formData,
-      created_by: user?.id,
-    });
-
+    const { error } = await supabase.from('resources').insert({ ...formData, created_by: user?.id });
     if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to create resource',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Failed to create resource', variant: 'destructive' });
     } else {
-      toast({
-        title: 'Success',
-        description: 'Resource added successfully',
-      });
+      toast({ title: 'Success', description: 'Resource added successfully' });
       setIsDialogOpen(false);
-      setFormData({
-        title: '',
-        description: '',
-        resource_type: 'link',
-        url: '',
-        track_id: '',
-      });
+      setFormData({ title: '', description: '', resource_type: 'link', url: '', track_id: '' });
       fetchResources();
     }
   };
 
   const handleCreateWeeklyResource = async () => {
     if (!weeklyFormData.title || !weeklyFormData.track_id || !weeklyFormData.week_number) {
-      toast({
-        title: 'Error',
-        description: 'Please fill in title, track, and week number',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Please fill in title, track, and week number', variant: 'destructive' });
       return;
     }
-
     const { error } = await supabase.from('weekly_resources').insert({
       title: weeklyFormData.title,
       description: weeklyFormData.description || null,
@@ -160,27 +125,12 @@ export default function Resources() {
       week_number: parseInt(weeklyFormData.week_number),
       created_by: user?.id,
     });
-
     if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to create curriculum resource',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Failed to create curriculum resource', variant: 'destructive' });
     } else {
-      toast({
-        title: 'Success',
-        description: 'Curriculum resource added successfully',
-      });
+      toast({ title: 'Success', description: 'Curriculum resource added successfully' });
       setIsWeeklyDialogOpen(false);
-      setWeeklyFormData({
-        title: '',
-        description: '',
-        resource_type: 'link',
-        url: '',
-        track_id: '',
-        week_number: '1',
-      });
+      setWeeklyFormData({ title: '', description: '', resource_type: 'link', url: '', track_id: '', week_number: '1' });
       fetchWeeklyResources();
     }
   };
@@ -195,39 +145,17 @@ export default function Resources() {
     }
   };
 
-  const getResourceIcon = (type: string) => {
-    switch (type) {
-      case 'video':
-        return <Video className="h-5 w-5" />;
-      case 'document':
-        return <FileText className="h-5 w-5" />;
-      case 'link':
-        return <LinkIcon className="h-5 w-5" />;
-      default:
-        return <BookOpen className="h-5 w-5" />;
-    }
-  };
+  const currentTypeConfig = getContentTypeConfig(formData.resource_type);
+  const weeklyTypeConfig = getContentTypeConfig(weeklyFormData.resource_type);
 
-  const getResourceTypeColor = (type: string) => {
-    switch (type) {
-      case 'video':
-        return 'bg-purple-100 text-purple-800';
-      case 'document':
-        return 'bg-blue-100 text-blue-800';
-      case 'link':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  // Group weekly resources by track and week
   const groupedWeeklyResources = weeklyResources.reduce((acc, res) => {
     const key = `${res.tracks?.name || 'Unknown'} - Week ${res.week_number}`;
     if (!acc[key]) acc[key] = [];
     acc[key].push(res);
     return acc;
   }, {} as Record<string, WeeklyResource[]>);
+
+  const isEmbeddable = (type: string) => ['video', 'notebook', 'slide_deck', 'code_example'].includes(type);
 
   return (
     <DashboardLayout>
@@ -237,6 +165,19 @@ export default function Resources() {
             <h1 className="text-3xl font-bold tracking-tight">Resources</h1>
             <p className="text-muted-foreground">Learning materials and curriculum resources</p>
           </div>
+        </div>
+
+        {/* Content type legend */}
+        <div className="flex flex-wrap gap-2">
+          {CONTENT_TYPES.map((ct) => {
+            const Icon = ct.icon;
+            return (
+              <Badge key={ct.value} variant="outline" className="gap-1.5 py-1">
+                <Icon className="h-3 w-3" />
+                {ct.label}
+              </Badge>
+            );
+          })}
         </div>
 
         <Tabs defaultValue="curriculum" className="space-y-4">
@@ -296,9 +237,7 @@ export default function Resources() {
                             </SelectTrigger>
                             <SelectContent>
                               {tracks.map((track) => (
-                                <SelectItem key={track.id} value={track.id}>
-                                  {track.name}
-                                </SelectItem>
+                                <SelectItem key={track.id} value={track.id}>{track.name}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -315,20 +254,10 @@ export default function Resources() {
                         </div>
                         <div>
                           <Label>Type</Label>
-                          <Select
+                          <ContentTypeSelect
                             value={weeklyFormData.resource_type}
                             onValueChange={(value) => setWeeklyFormData({ ...weeklyFormData, resource_type: value })}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="link">Link</SelectItem>
-                              <SelectItem value="video">Video</SelectItem>
-                              <SelectItem value="document">Document</SelectItem>
-                              <SelectItem value="tutorial">Tutorial</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          />
                         </div>
                       </div>
                       <div>
@@ -336,8 +265,9 @@ export default function Resources() {
                         <Input
                           value={weeklyFormData.url}
                           onChange={(e) => setWeeklyFormData({ ...weeklyFormData, url: e.target.value })}
-                          placeholder="https://..."
+                          placeholder={weeklyTypeConfig.placeholder}
                         />
+                        <p className="text-xs text-muted-foreground mt-1">{weeklyTypeConfig.description}</p>
                       </div>
                       <Button onClick={handleCreateWeeklyResource} className="w-full">
                         Add to Curriculum
@@ -366,43 +296,50 @@ export default function Resources() {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
-                        {items.map((res) => (
-                          <div key={res.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                            <div className="flex items-center gap-3">
-                              {getResourceIcon(res.resource_type)}
-                              <div>
-                                <p className="font-medium">{res.title}</p>
-                                {res.description && (
-                                  <p className="text-sm text-muted-foreground">{res.description}</p>
+                        {items.map((res) => {
+                          const config = getContentTypeConfig(res.resource_type);
+                          const Icon = config.icon;
+                          return (
+                            <div key={res.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <Icon className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
+                                <div className="min-w-0">
+                                  <p className="font-medium truncate">{res.title}</p>
+                                  {res.description && (
+                                    <p className="text-sm text-muted-foreground truncate">{res.description}</p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <Badge className={config.badgeClass}>{config.label}</Badge>
+                                {res.url && isEmbeddable(res.resource_type) && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setViewerResource(res)}
+                                  >
+                                    <Play className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                {res.url && (
+                                  <Button variant="ghost" size="sm" onClick={() => window.open(res.url!, '_blank')}>
+                                    <LinkIcon className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                {userRole === 'supervisor' && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeleteWeeklyResource(res.id)}
+                                    className="text-destructive hover:text-destructive"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
                                 )}
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Badge className={getResourceTypeColor(res.resource_type)}>
-                                {res.resource_type}
-                              </Badge>
-                              {res.url && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => window.open(res.url!, '_blank')}
-                                >
-                                  <LinkIcon className="h-4 w-4" />
-                                </Button>
-                              )}
-                              {userRole === 'supervisor' && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDeleteWeeklyResource(res.id)}
-                                  className="text-destructive hover:text-destructive"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </CardContent>
                   </Card>
@@ -449,20 +386,10 @@ export default function Resources() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="resource_type">Type</Label>
-                          <Select
+                          <ContentTypeSelect
                             value={formData.resource_type}
                             onValueChange={(value) => setFormData({ ...formData, resource_type: value })}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="link">Link</SelectItem>
-                              <SelectItem value="video">Video</SelectItem>
-                              <SelectItem value="document">Document</SelectItem>
-                              <SelectItem value="tutorial">Tutorial</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          />
                         </div>
                         <div>
                           <Label htmlFor="track_id">Track (Optional)</Label>
@@ -476,9 +403,7 @@ export default function Resources() {
                             <SelectContent>
                               <SelectItem value="">All Tracks</SelectItem>
                               {tracks.map((track) => (
-                                <SelectItem key={track.id} value={track.id}>
-                                  {track.name}
-                                </SelectItem>
+                                <SelectItem key={track.id} value={track.id}>{track.name}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -490,8 +415,9 @@ export default function Resources() {
                           id="url"
                           value={formData.url}
                           onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                          placeholder="https://..."
+                          placeholder={currentTypeConfig.placeholder}
                         />
+                        <p className="text-xs text-muted-foreground mt-1">{currentTypeConfig.description}</p>
                       </div>
                       <Button onClick={handleCreateResource} className="w-full">
                         Add Resource
@@ -503,41 +429,62 @@ export default function Resources() {
             )}
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {resources.map((resource) => (
-                <Card key={resource.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-2">
-                        {getResourceIcon(resource.resource_type)}
-                        <CardTitle className="text-lg">{resource.title}</CardTitle>
+              {resources.map((resource) => {
+                const config = getContentTypeConfig(resource.resource_type);
+                const Icon = config.icon;
+                return (
+                  <Card key={resource.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Icon className="h-5 w-5 flex-shrink-0" />
+                          <CardTitle className="text-lg truncate">{resource.title}</CardTitle>
+                        </div>
+                        <Badge className={config.badgeClass}>{config.label}</Badge>
                       </div>
-                      <Badge className={getResourceTypeColor(resource.resource_type)}>
-                        {resource.resource_type}
-                      </Badge>
-                    </div>
-                    {resource.tracks && (
-                      <p className="text-sm text-muted-foreground">{resource.tracks.name}</p>
-                    )}
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <p className="text-sm text-muted-foreground">{resource.description}</p>
-                    {resource.url && (
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => window.open(resource.url, '_blank')}
-                      >
-                        <LinkIcon className="h-4 w-4 mr-2" />
-                        Open Resource
-                      </Button>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
+                      {resource.tracks && (
+                        <p className="text-sm text-muted-foreground">{resource.tracks.name}</p>
+                      )}
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <p className="text-sm text-muted-foreground">{resource.description}</p>
+                      <div className="flex gap-2">
+                        {resource.url && isEmbeddable(resource.resource_type) && (
+                          <Button
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => setViewerResource(resource)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            Preview
+                          </Button>
+                        )}
+                        {resource.url && (
+                          <Button
+                            variant="outline"
+                            className={isEmbeddable(resource.resource_type) ? '' : 'w-full'}
+                            onClick={() => window.open(resource.url, '_blank')}
+                          >
+                            <LinkIcon className="h-4 w-4 mr-2" />
+                            Open
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Content Viewer Dialog */}
+      <ContentViewer
+        open={!!viewerResource}
+        onOpenChange={(open) => !open && setViewerResource(null)}
+        resource={viewerResource || { title: '', resource_type: 'link' }}
+      />
     </DashboardLayout>
   );
 }

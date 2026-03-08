@@ -10,7 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { BookOpen, Link as LinkIcon, Video, FileText, Plus, ExternalLink, Trash2 } from 'lucide-react';
+import { BookOpen, Plus, ExternalLink, Trash2, Play } from 'lucide-react';
+import { getContentTypeConfig } from '@/components/resources/contentTypes';
+import { ContentTypeSelect } from '@/components/resources/ContentTypeSelect';
+import { ContentViewer } from '@/components/resources/ContentViewer';
 
 interface WeeklyResourcesSectionProps {
   trackId: string;
