@@ -377,6 +377,18 @@ export default function Tracks() {
                   variant="outline"
                   onClick={() => {
                     setViewOpen(false);
+                    setCurriculumTrack(selectedTrack);
+                    setManualCurriculumOpen(true);
+                  }}
+                  className="flex-1"
+                >
+                  <ClipboardList className="mr-2 h-4 w-4" />
+                  Manual Curriculum
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    setViewOpen(false);
                     openCurriculumGenerator(selectedTrack);
                   }}
                   className="flex-1"
@@ -384,6 +396,8 @@ export default function Tracks() {
                   <Sparkles className="mr-2 h-4 w-4" />
                   AI Curriculum
                 </Button>
+              </div>
+              <div className="flex gap-2">
                 <Button onClick={() => {
                   setViewOpen(false);
                   openEditDialog(selectedTrack);
