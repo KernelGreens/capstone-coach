@@ -19,7 +19,8 @@ import {
     MessageCircle,
     Menu,
     X,
-    Briefcase
+    Briefcase,
+    Trophy
 } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
 import { cn } from '@/lib/utils';
