@@ -109,7 +109,7 @@ export default function MyProgress() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold">My Learning Journey</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">My Learning Journey</h1>
           {track && (
             <div className="flex items-center gap-2 text-muted-foreground">
               <GraduationCap className="h-4 w-4" />
