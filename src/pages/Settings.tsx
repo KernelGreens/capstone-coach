@@ -44,7 +44,7 @@ function OnboardingResetCard() {
     </Card>
   );
 }
-
+function NotificationsTab() {
   const { isSupported, isSubscribed, permission, loading, subscribe, unsubscribe } = usePushNotifications();
 
   return (
