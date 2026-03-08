@@ -3,9 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
-// VAPID public key - this is safe to expose client-side
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || '';
-
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -24,16 +21,29 @@ export function usePushNotifications() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [loading, setLoading] = useState(false);
+  const [vapidPublicKey, setVapidPublicKey] = useState<string>('');
 
   useEffect(() => {
     const supported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
     setIsSupported(supported);
-    
+
     if (supported) {
       setPermission(Notification.permission);
       checkExistingSubscription();
+      fetchVapidKey();
     }
   }, [user]);
+
+  const fetchVapidKey = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('get-vapid-key');
+      if (!error && data?.vapidPublicKey) {
+        setVapidPublicKey(data.vapidPublicKey);
+      }
+    } catch {
+      console.error('Failed to fetch VAPID key');
+    }
+  };
 
   const checkExistingSubscription = async () => {
     try {
@@ -46,11 +56,13 @@ export function usePushNotifications() {
   };
 
   const subscribe = useCallback(async () => {
-    if (!user || !isSupported || !VAPID_PUBLIC_KEY) {
+    if (!user || !isSupported || !vapidPublicKey) {
       toast({
         variant: 'destructive',
         title: 'Push notifications unavailable',
-        description: 'Your browser does not support push notifications or VAPID key is missing.',
+        description: !vapidPublicKey
+          ? 'Push notification configuration is not ready. Please try again.'
+          : 'Your browser does not support push notifications.',
       });
       return;
     }
@@ -58,7 +70,6 @@ export function usePushNotifications() {
     setLoading(true);
 
     try {
-      // Request notification permission
       const perm = await Notification.requestPermission();
       setPermission(perm);
 
@@ -75,15 +86,13 @@ export function usePushNotifications() {
       const registration = await navigator.serviceWorker.register('/sw-push.js');
       await navigator.serviceWorker.ready;
 
-      // Subscribe to push
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY).buffer as ArrayBuffer,
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey).buffer as ArrayBuffer,
       });
 
       const subJson = subscription.toJSON();
 
-      // Store subscription in database
       const { error } = await supabase.from('push_subscriptions').upsert(
         {
           user_id: user.id,
@@ -111,7 +120,7 @@ export function usePushNotifications() {
     } finally {
       setLoading(false);
     }
-  }, [user, isSupported, toast]);
+  }, [user, isSupported, vapidPublicKey, toast]);
 
   const unsubscribe = useCallback(async () => {
     if (!user) return;
@@ -124,7 +133,6 @@ export function usePushNotifications() {
       if (subscription) {
         await subscription.unsubscribe();
 
-        // Remove from database
         await supabase
           .from('push_subscriptions')
           .delete()
