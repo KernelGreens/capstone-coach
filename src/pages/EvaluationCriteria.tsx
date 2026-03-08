@@ -120,6 +120,7 @@ export default function EvaluationCriteria() {
       criterion: formData.criterion,
       weight: parseFloat(formData.weight),
       max_score: parseInt(formData.max_score),
+      created_by: user?.id || '',
     };
 
     if (editingCriterion) {
