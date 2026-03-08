@@ -16,11 +16,6 @@ export default function Portfolio() {
   const [searchParams] = useSearchParams();
   const shareToken = searchParams.get('token');
   const studentIdParam = searchParams.get('student');
-
-  // Redirect non-authenticated users without a share token
-  if (!authLoading && !user && !shareToken) {
-    return <Navigate to="/auth" replace />;
-  }
   const [portfolio, setPortfolio] = useState<any>(null);
   const [student, setStudent] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
@@ -32,8 +27,15 @@ export default function Portfolio() {
   const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetchPortfolioData();
-  }, [user, shareToken, studentIdParam]);
+    if (!authLoading) {
+      fetchPortfolioData();
+    }
+  }, [user, shareToken, studentIdParam, authLoading]);
+
+  // Redirect non-authenticated users without a share token
+  if (!authLoading && !user && !shareToken) {
+    return <Navigate to="/auth" replace />;
+  }
 
   const fetchPortfolioData = async () => {
     setLoading(true);
