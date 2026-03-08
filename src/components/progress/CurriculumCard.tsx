@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, Target, Wrench, FileCheck } from 'lucide-react';
 import { WeeklyResourcesSection } from './WeeklyResourcesSection';
+import { LessonList } from '@/components/lessons/LessonList';
 
 interface CurriculumCardProps {
   project: any;
@@ -99,6 +100,17 @@ export function CurriculumCard({ project, trackId, weekNumber, canEditResources 
                 </Badge>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Lessons Section */}
+        {project?.id && (
+          <div className="border-t pt-4 mt-4">
+            <LessonList
+              projectId={project.id}
+              projectTitle={project.title}
+              isSuperviorView={canEditResources}
+            />
           </div>
         )}
 
