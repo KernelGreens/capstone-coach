@@ -356,7 +356,8 @@ export default function Settings() {
         .update({
           full_name: profile.full_name,
           avatar_url: avatarUrl,
-        })
+          timezone: profile.timezone,
+        } as any)
         .eq('id', user.id);
 
       if (error) throw error;
