@@ -206,6 +206,45 @@ export default function Projects() {
     URL.revokeObjectURL(url);
   };
 
+  const weeklyProjects = filteredProjects.filter(p => p.week_number != null).sort((a: any, b: any) => a.week_number - b.week_number);
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = weeklyProjects.findIndex((p: any) => p.id === active.id);
+    const newIndex = weeklyProjects.findIndex((p: any) => p.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = arrayMove(weeklyProjects, oldIndex, newIndex);
+    
+    // Optimistically update local state with new week numbers
+    const updates = reordered.map((p: any, i: number) => ({
+      ...p,
+      week_number: i + 1,
+    }));
+    
+    setProjects(prev => {
+      const nonWeekly = prev.filter((p: any) => p.week_number == null || !weeklyProjects.some((wp: any) => wp.id === p.id));
+      return [...nonWeekly, ...updates].sort((a: any, b: any) => (a.week_number || 999) - (b.week_number || 999));
+    });
+
+    // Persist to DB
+    try {
+      const promises = updates.map((p: any) =>
+        supabase.from('projects').update({ week_number: p.week_number }).eq('id', p.id)
+      );
+      const results = await Promise.all(promises);
+      const error = results.find(r => r.error)?.error;
+      if (error) throw error;
+      
+      toast({ title: 'Reordered', description: 'Week numbers updated successfully' });
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to save new order' });
+      fetchData(); // rollback
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
