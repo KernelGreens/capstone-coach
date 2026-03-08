@@ -15,6 +15,7 @@ import {
   Settings,
   BarChart3,
   MessageSquareHeart,
+  MessageCircle,
   Menu,
   X
 } from 'lucide-react';
