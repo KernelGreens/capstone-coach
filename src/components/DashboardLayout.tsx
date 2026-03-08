@@ -63,6 +63,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { href: '/my-evaluations', label: 'My Evaluations', icon: BarChart3 },
     { href: '/meetings', label: 'Meetings', icon: Calendar },
     { href: '/messages', label: 'Messages', icon: MessageCircle },
+    { href: '/capstone', label: 'Capstone', icon: Trophy },
     { href: '/resources', label: 'Resources', icon: Library },
     { href: '/portfolio', label: 'Portfolio', icon: Briefcase },
     { href: '/submit-feedback', label: 'Feedback', icon: MessageSquareHeart },
