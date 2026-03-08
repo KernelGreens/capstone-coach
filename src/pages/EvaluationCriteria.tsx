@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -54,6 +55,7 @@ export default function EvaluationCriteria() {
     weight: '1',
     max_score: '10',
   });
+  const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -118,6 +120,7 @@ export default function EvaluationCriteria() {
       criterion: formData.criterion,
       weight: parseFloat(formData.weight),
       max_score: parseInt(formData.max_score),
+      created_by: user?.id || '',
     };
 
     if (editingCriterion) {
