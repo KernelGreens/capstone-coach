@@ -15,6 +15,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import { SortableProjectCard } from '@/components/projects/SortableProjectCard';
 
 export default function Projects() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -27,6 +31,10 @@ export default function Projects() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTrack, setSelectedTrack] = useState<string>('all');
   const { toast } = useToast();
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   const [formData, setFormData] = useState({
     track_id: '',
@@ -196,6 +204,45 @@ export default function Projects() {
     a.download = 'projects.json';
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const weeklyProjects = filteredProjects.filter(p => p.week_number != null).sort((a: any, b: any) => a.week_number - b.week_number);
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = weeklyProjects.findIndex((p: any) => p.id === active.id);
+    const newIndex = weeklyProjects.findIndex((p: any) => p.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = arrayMove(weeklyProjects, oldIndex, newIndex);
+    
+    // Optimistically update local state with new week numbers
+    const updates = reordered.map((p: any, i: number) => ({
+      ...p,
+      week_number: i + 1,
+    }));
+    
+    setProjects(prev => {
+      const nonWeekly = prev.filter((p: any) => p.week_number == null || !weeklyProjects.some((wp: any) => wp.id === p.id));
+      return [...nonWeekly, ...updates].sort((a: any, b: any) => (a.week_number || 999) - (b.week_number || 999));
+    });
+
+    // Persist to DB
+    try {
+      const promises = updates.map((p: any) =>
+        supabase.from('projects').update({ week_number: p.week_number }).eq('id', p.id)
+      );
+      const results = await Promise.all(promises);
+      const error = results.find(r => r.error)?.error;
+      if (error) throw error;
+      
+      toast({ title: 'Reordered', description: 'Week numbers updated successfully' });
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to save new order' });
+      fetchData(); // rollback
+    }
   };
 
   return (
@@ -393,15 +440,44 @@ export default function Projects() {
                   </CardContent>
                 </Card>
               ) : (
-                filteredProjects.map((project) => (
-                  <ProjectCard
-                    key={project.id}
-                    project={project}
-                    onEdit={handleEdit}
-                    onDelete={setDeletingProject}
-                    onView={setViewProject}
-                  />
-                ))
+                <>
+                  {weeklyProjects.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-2">Weekly Projects (drag to reorder)</h3>
+                      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} modifiers={[restrictToVerticalAxis]}>
+                        <SortableContext items={weeklyProjects.map((p: any) => p.id)} strategy={verticalListSortingStrategy}>
+                          <div className="space-y-4">
+                            {weeklyProjects.map((project: any) => (
+                              <SortableProjectCard
+                                key={project.id}
+                                project={project}
+                                onEdit={handleEdit}
+                                onDelete={setDeletingProject}
+                                onView={setViewProject}
+                                isDraggable
+                              />
+                            ))}
+                          </div>
+                        </SortableContext>
+                      </DndContext>
+                    </div>
+                  )}
+                  {filteredProjects.filter((p: any) => p.week_number == null).length > 0 && (
+                    <div>
+                      {weeklyProjects.length > 0 && <h3 className="text-sm font-medium text-muted-foreground mb-2 mt-6">Other Projects</h3>}
+                      {filteredProjects.filter((p: any) => p.week_number == null).map((project: any) => (
+                        <div key={project.id} className="mb-4">
+                          <SortableProjectCard
+                            project={project}
+                            onEdit={handleEdit}
+                            onDelete={setDeletingProject}
+                            onView={setViewProject}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </TabsContent>
 
@@ -416,7 +492,7 @@ export default function Projects() {
                 </Card>
               ) : (
                 miniProjects.map((project) => (
-                  <ProjectCard
+                  <SortableProjectCard
                     key={project.id}
                     project={project}
                     onEdit={handleEdit}
@@ -438,7 +514,7 @@ export default function Projects() {
                 </Card>
               ) : (
                 capstoneProjects.map((project) => (
-                  <ProjectCard
+                  <SortableProjectCard
                     key={project.id}
                     project={project}
                     onEdit={handleEdit}
@@ -519,56 +595,5 @@ export default function Projects() {
         </Dialog>
       </div>
     </DashboardLayout>
-  );
-}
-
-function ProjectCard({ project, onEdit, onDelete, onView }: { 
-  project: any;
-  onEdit: (project: any) => void;
-  onDelete: (project: any) => void;
-  onView: (project: any) => void;
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3 flex-1">
-            <BookOpen className="h-5 w-5 text-primary flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <CardTitle className="truncate">{project.title}</CardTitle>
-              <CardDescription className="mt-1">
-                {project.tracks?.name} {project.week_number && `• Week ${project.week_number}`}
-              </CardDescription>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant={project.project_type === 'capstone' ? 'default' : 'secondary'}>
-              {project.project_type}
-            </Badge>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {project.description && (
-          <div>
-            <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
-          </div>
-        )}
-        <div className="flex gap-2 pt-2">
-          <Button variant="outline" size="sm" onClick={() => onView(project)}>
-            <Eye className="h-4 w-4 mr-1" />
-            View Details
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => onEdit(project)}>
-            <Edit className="h-4 w-4 mr-1" />
-            Edit
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => onDelete(project)}>
-            <Trash2 className="h-4 w-4 mr-1" />
-            Delete
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
