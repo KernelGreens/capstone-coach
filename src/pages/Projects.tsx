@@ -594,6 +594,15 @@ export default function Projects() {
                     <p className="text-sm text-muted-foreground">{viewProject.tools_technologies}</p>
                   </div>
                 )}
+
+                {/* Lessons */}
+                <div className="border-t pt-4">
+                  <LessonList
+                    projectId={viewProject.id}
+                    projectTitle={viewProject.title}
+                    isSuperviorView={true}
+                  />
+                </div>
               </div>
             )}
           </DialogContent>
