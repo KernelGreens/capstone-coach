@@ -492,7 +492,7 @@ export default function Projects() {
                 </Card>
               ) : (
                 miniProjects.map((project) => (
-                  <ProjectCard
+                  <SortableProjectCard
                     key={project.id}
                     project={project}
                     onEdit={handleEdit}
