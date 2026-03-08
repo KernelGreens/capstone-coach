@@ -440,15 +440,44 @@ export default function Projects() {
                   </CardContent>
                 </Card>
               ) : (
-                filteredProjects.map((project) => (
-                  <ProjectCard
-                    key={project.id}
-                    project={project}
-                    onEdit={handleEdit}
-                    onDelete={setDeletingProject}
-                    onView={setViewProject}
-                  />
-                ))
+                <>
+                  {weeklyProjects.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-2">Weekly Projects (drag to reorder)</h3>
+                      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} modifiers={[restrictToVerticalAxis]}>
+                        <SortableContext items={weeklyProjects.map((p: any) => p.id)} strategy={verticalListSortingStrategy}>
+                          <div className="space-y-4">
+                            {weeklyProjects.map((project: any) => (
+                              <SortableProjectCard
+                                key={project.id}
+                                project={project}
+                                onEdit={handleEdit}
+                                onDelete={setDeletingProject}
+                                onView={setViewProject}
+                                isDraggable
+                              />
+                            ))}
+                          </div>
+                        </SortableContext>
+                      </DndContext>
+                    </div>
+                  )}
+                  {filteredProjects.filter((p: any) => p.week_number == null).length > 0 && (
+                    <div>
+                      {weeklyProjects.length > 0 && <h3 className="text-sm font-medium text-muted-foreground mb-2 mt-6">Other Projects</h3>}
+                      {filteredProjects.filter((p: any) => p.week_number == null).map((project: any) => (
+                        <div key={project.id} className="mb-4">
+                          <SortableProjectCard
+                            project={project}
+                            onEdit={handleEdit}
+                            onDelete={setDeletingProject}
+                            onView={setViewProject}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </TabsContent>
 
