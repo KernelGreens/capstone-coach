@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { LayoutDashboard, FileText, MessageCircle, BookOpen, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, FileText, MessageCircle, BookOpen, BarChart3, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function MobileBottomNav() {
@@ -11,6 +11,7 @@ export function MobileBottomNav() {
     { href: '/dashboard', label: 'Home', icon: LayoutDashboard },
     { href: '/my-progress', label: 'Progress', icon: FileText },
     { href: '/messages', label: 'Chat', icon: MessageCircle },
+    { href: '/ai-assistant', label: 'AI', icon: Sparkles },
     { href: '/resources', label: 'Learn', icon: BookOpen },
     { href: '/capstone', label: 'Capstone', icon: BarChart3 },
   ];
