@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,9 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, User, Mail, Camera, Shield, Bell, BellRing, BellOff, Fingerprint, Smartphone, Trash2, RotateCcw } from 'lucide-react';
+import { Loader2, User, Mail, Camera, Shield, Bell, BellRing, BellOff, Fingerprint, Smartphone, Trash2, RotateCcw, Globe } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 import { useBiometricAuth } from '@/hooks/use-biometric-auth';
@@ -270,6 +271,7 @@ export default function Settings() {
     full_name: '',
     email: '',
     avatar_url: '',
+    timezone: '',
   });
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const { toast } = useToast();
@@ -300,6 +302,7 @@ export default function Settings() {
         full_name: data.full_name || '',
         email: data.email || '',
         avatar_url: data.avatar_url || '',
+        timezone: (data as any).timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
       });
     }
     setLoading(false);
@@ -353,7 +356,8 @@ export default function Settings() {
         .update({
           full_name: profile.full_name,
           avatar_url: avatarUrl,
-        })
+          timezone: profile.timezone,
+        } as any)
         .eq('id', user.id);
 
       if (error) throw error;
@@ -503,6 +507,38 @@ export default function Settings() {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+                </div>
+
+                {/* Timezone Field */}
+                <div className="space-y-2">
+                  <Label htmlFor="timezone" className="flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                    Timezone
+                  </Label>
+                  <Select
+                    value={profile.timezone}
+                    onValueChange={(value) => setProfile((prev) => ({ ...prev, timezone: value }))}
+                  >
+                    <SelectTrigger id="timezone">
+                      <SelectValue placeholder="Select timezone" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-60">
+                      {[
+                        'UTC','Africa/Lagos','Africa/Cairo','Africa/Johannesburg','Africa/Nairobi',
+                        'America/New_York','America/Chicago','America/Denver','America/Los_Angeles',
+                        'America/Sao_Paulo','America/Toronto','Asia/Dubai','Asia/Kolkata','Asia/Shanghai',
+                        'Asia/Tokyo','Asia/Singapore','Australia/Sydney','Europe/London','Europe/Berlin',
+                        'Europe/Paris','Europe/Moscow','Pacific/Auckland',
+                      ].map((tz) => (
+                        <SelectItem key={tz} value={tz}>
+                          {tz.replace(/_/g, ' ')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Used for morning meeting reminders at ~7 AM your time
+                  </p>
                 </div>
 
                 <Button onClick={handleSaveProfile} disabled={saving}>
