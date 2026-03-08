@@ -22,7 +22,8 @@ import {
   Briefcase,
   Trophy,
   Store,
-  Crown
+  Crown,
+  Sparkles
 } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
 import { cn } from '@/lib/utils';
