@@ -16,9 +16,11 @@ import {
   Pencil,
   Trash2,
   User,
+  Presentation,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { generatePptx } from '@/lib/generatePptx';
 import {
   AlertDialog,
   AlertDialogAction,
