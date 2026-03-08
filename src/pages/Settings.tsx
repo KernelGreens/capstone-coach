@@ -7,13 +7,43 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, User, Mail, Camera, Shield, Bell, BellRing, BellOff, Fingerprint, Smartphone, Trash2 } from 'lucide-react';
+import { Loader2, User, Mail, Camera, Shield, Bell, BellRing, BellOff, Fingerprint, Smartphone, Trash2, RotateCcw } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 import { useBiometricAuth } from '@/hooks/use-biometric-auth';
+import { useOnboarding } from '@/hooks/use-onboarding';
+import { useNavigate } from 'react-router-dom';
 
+function OnboardingResetCard() {
+  const { user, userRole } = useAuth();
+  const { resetOnboarding } = useOnboarding(user?.id, userRole);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Onboarding Tour</CardTitle>
+        <CardDescription>Replay the welcome wizard and guided tour to revisit key features</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Button
+          variant="outline"
+          onClick={() => {
+            resetOnboarding();
+            toast({ title: 'Onboarding reset', description: 'Redirecting to dashboard…' });
+            navigate('/dashboard');
+          }}
+        >
+          <RotateCcw className="mr-2 h-4 w-4" />
+          Replay Onboarding Tour
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
 function NotificationsTab() {
   const { isSupported, isSubscribed, permission, loading, subscribe, unsubscribe } = usePushNotifications();
 
@@ -410,6 +440,10 @@ export default function Settings() {
               <Bell className="h-4 w-4" />
               Notifications
             </TabsTrigger>
+            <TabsTrigger value="general" className="gap-2">
+              <RotateCcw className="h-4 w-4" />
+              General
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile">
@@ -512,6 +546,10 @@ export default function Settings() {
 
           <TabsContent value="notifications">
             <NotificationsTab />
+          </TabsContent>
+
+          <TabsContent value="general">
+            <OnboardingResetCard />
           </TabsContent>
         </Tabs>
       </div>
