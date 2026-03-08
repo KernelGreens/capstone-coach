@@ -26,6 +26,7 @@ import { NotificationBell } from './NotificationBell';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { MobileBottomNav } from './MobileBottomNav';
 
 interface DashboardLayoutProps {
   children: ReactNode;
