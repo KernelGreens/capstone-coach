@@ -71,16 +71,29 @@ serve(async (req) => {
         apiVersion: '2025-08-27.basil',
       });
 
+      const PREMIUM_PRODUCT_IDS = [
+        "prod_U74B4nS5LsUWIU",
+        "prod_U74C240Qcx85oz",
+      ];
+
       let maxStudents = 1;
+      let tierName = 'Free';
       const customers = await stripe.customers.list({ email: supervisorEmail, limit: 1 });
       if (customers.data.length > 0) {
         const subscriptions = await stripe.subscriptions.list({
           customer: customers.data[0].id,
           status: 'active',
-          limit: 1,
+          limit: 10,
         });
         if (subscriptions.data.length > 0) {
-          maxStudents = 10;
+          const productId = subscriptions.data[0].items.data[0].price.product as string;
+          if (PREMIUM_PRODUCT_IDS.includes(productId)) {
+            maxStudents = 999;
+            tierName = 'Premium';
+          } else {
+            maxStudents = 10;
+            tierName = 'Pro';
+          }
         }
       }
 
@@ -88,7 +101,7 @@ serve(async (req) => {
         throw new Error(
           maxStudents === 1
             ? 'Free plan allows only 1 active student. Upgrade to Pro to add more.'
-            : `Pro plan allows up to ${maxStudents} active students. You have ${activeStudents}.`
+            : `${tierName} plan allows up to ${maxStudents} active students. You have ${activeStudents}.`
         );
       }
     }
