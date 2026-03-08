@@ -286,7 +286,7 @@ export default function Projects() {
                 <DialogTitle>{editingProject ? 'Edit Project' : 'Create New Project'}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label>Track *</Label>
                     <Select value={formData.track_id} onValueChange={(value) => setFormData({ ...formData, track_id: value })}>
