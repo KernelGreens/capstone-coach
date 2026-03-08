@@ -11,8 +11,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Target, Edit2, Trash2, Loader2, Search, Users, BookOpen, Sparkles } from 'lucide-react';
+import { Plus, Target, Edit2, Trash2, Loader2, Search, Users, BookOpen, Sparkles, ClipboardList } from 'lucide-react';
 import { CurriculumGeneratorDialog } from '@/components/tracks/CurriculumGeneratorDialog';
+import { ManualCurriculumDialog } from '@/components/tracks/ManualCurriculumDialog';
 
 export default function Tracks() {
   const { user } = useAuth();
@@ -27,6 +28,7 @@ export default function Tracks() {
   const [selectedTrack, setSelectedTrack] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [curriculumOpen, setCurriculumOpen] = useState(false);
+  const [manualCurriculumOpen, setManualCurriculumOpen] = useState(false);
   const [curriculumTrack, setCurriculumTrack] = useState<any>(null);
   const { toast } = useToast();
 
@@ -375,6 +377,18 @@ export default function Tracks() {
                   variant="outline"
                   onClick={() => {
                     setViewOpen(false);
+                    setCurriculumTrack(selectedTrack);
+                    setManualCurriculumOpen(true);
+                  }}
+                  className="flex-1"
+                >
+                  <ClipboardList className="mr-2 h-4 w-4" />
+                  Manual Curriculum
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    setViewOpen(false);
                     openCurriculumGenerator(selectedTrack);
                   }}
                   className="flex-1"
@@ -382,6 +396,8 @@ export default function Tracks() {
                   <Sparkles className="mr-2 h-4 w-4" />
                   AI Curriculum
                 </Button>
+              </div>
+              <div className="flex gap-2">
                 <Button onClick={() => {
                   setViewOpen(false);
                   openEditDialog(selectedTrack);
@@ -433,6 +449,16 @@ export default function Tracks() {
             trackId={curriculumTrack.id}
             trackName={curriculumTrack.name}
             trackDescription={curriculumTrack.description || ''}
+            onSaved={fetchTracks}
+          />
+        )}
+
+        {curriculumTrack && (
+          <ManualCurriculumDialog
+            open={manualCurriculumOpen}
+            onOpenChange={setManualCurriculumOpen}
+            trackId={curriculumTrack.id}
+            trackName={curriculumTrack.name}
             onSaved={fetchTracks}
           />
         )}
