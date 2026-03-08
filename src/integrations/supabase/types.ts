@@ -59,6 +59,82 @@ export type Database = {
           },
         ]
       }
+      conversation_participants: {
+        Row: {
+          conversation_id: string
+          id: string
+          joined_at: string
+          last_read_at: string | null
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          id?: string
+          joined_at?: string
+          last_read_at?: string | null
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          id?: string
+          joined_at?: string
+          last_read_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_participants_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_pinned: boolean | null
+          title: string | null
+          track_id: string | null
+          type: Database["public"]["Enums"]["conversation_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          title?: string | null
+          track_id?: string | null
+          type: Database["public"]["Enums"]["conversation_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          title?: string | null
+          track_id?: string | null
+          type?: Database["public"]["Enums"]["conversation_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deliverables: {
         Row: {
           description: string | null
@@ -237,6 +313,54 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          is_edited: boolean | null
+          parent_message_id: string | null
+          sender_id: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          is_edited?: boolean | null
+          parent_message_id?: string | null
+          sender_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          is_edited?: boolean | null
+          parent_message_id?: string | null
+          sender_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_parent_message_id_fkey"
+            columns: ["parent_message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -267,6 +391,93 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      office_hour_bookings: {
+        Row: {
+          booking_date: string
+          created_at: string
+          id: string
+          notes: string | null
+          office_hour_id: string
+          start_time: string
+          status: string
+          student_id: string
+        }
+        Insert: {
+          booking_date: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          office_hour_id: string
+          start_time: string
+          status?: string
+          student_id: string
+        }
+        Update: {
+          booking_date?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          office_hour_id?: string
+          start_time?: string
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "office_hour_bookings_office_hour_id_fkey"
+            columns: ["office_hour_id"]
+            isOneToOne: false
+            referencedRelation: "office_hours"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "office_hour_bookings_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      office_hours: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          is_active: boolean | null
+          slot_duration_minutes: number
+          start_time: string
+          supervisor_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          is_active?: boolean | null
+          slot_duration_minutes?: number
+          start_time: string
+          supervisor_id: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          is_active?: boolean | null
+          slot_duration_minutes?: number
+          start_time?: string
+          supervisor_id?: string
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -771,6 +982,7 @@ export type Database = {
     }
     Enums: {
       app_role: "supervisor" | "student"
+      conversation_type: "direct" | "group" | "announcement" | "question_thread"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -899,6 +1111,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["supervisor", "student"],
+      conversation_type: ["direct", "group", "announcement", "question_thread"],
     },
   },
 } as const

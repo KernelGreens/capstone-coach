@@ -21,6 +21,7 @@ import Settings from "./pages/Settings";
 import EvaluationCriteria from "./pages/EvaluationCriteria";
 import SubmitFeedback from "./pages/SubmitFeedback";
 import ViewFeedback from "./pages/ViewFeedback";
+import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/submit-feedback" element={<ProtectedRoute><SubmitFeedback /></ProtectedRoute>} />
             <Route path="/feedback" element={<ProtectedRoute allowedRoles={['supervisor']}><ViewFeedback /></ProtectedRoute>} />
+            <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
