@@ -14,6 +14,7 @@ import {
   GraduationCap,
   Settings,
   BarChart3,
+  TrendingUp,
   MessageSquareHeart,
   MessageCircle,
   Menu,

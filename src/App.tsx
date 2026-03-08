@@ -52,6 +52,7 @@ const App = () => (
             <Route path="/submit-feedback" element={<ProtectedRoute><SubmitFeedback /></ProtectedRoute>} />
             <Route path="/feedback" element={<ProtectedRoute allowedRoles={['supervisor']}><ViewFeedback /></ProtectedRoute>} />
             <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+            <Route path="/analytics" element={<ProtectedRoute allowedRoles={['supervisor']}><Analytics /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
