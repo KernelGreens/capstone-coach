@@ -7,11 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, User, Mail, Camera, Shield, Bell, BellRing, BellOff } from 'lucide-react';
+import { Loader2, User, Mail, Camera, Shield, Bell, BellRing, BellOff, Fingerprint, Smartphone, Trash2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
+import { useBiometricAuth } from '@/hooks/use-biometric-auth';
 
 function NotificationsTab() {
   const { isSupported, isSubscribed, permission, loading, subscribe, unsubscribe } = usePushNotifications();
@@ -86,6 +87,110 @@ function NotificationsTab() {
           </div>
           <Switch defaultChecked />
         </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function BiometricSettingsCard() {
+  const { isSupported, loading, registerBiometric, getRegisteredCredentials, removeCredential } = useBiometricAuth();
+  const [credentials, setCredentials] = useState<any[]>([]);
+  const [deviceName, setDeviceName] = useState('');
+
+  useEffect(() => {
+    loadCredentials();
+  }, []);
+
+  const loadCredentials = async () => {
+    const creds = await getRegisteredCredentials();
+    setCredentials(creds);
+  };
+
+  const handleRegister = async () => {
+    const success = await registerBiometric(deviceName || undefined);
+    if (success) {
+      setDeviceName('');
+      await loadCredentials();
+    }
+  };
+
+  const handleRemove = async (id: string) => {
+    await removeCredential(id);
+    await loadCredentials();
+  };
+
+  if (!isSupported) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Fingerprint className="h-5 w-5" />
+            Biometric Sign-In
+          </CardTitle>
+          <CardDescription>Not available on this device/browser</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Fingerprint className="h-5 w-5" />
+          Biometric Sign-In
+        </CardTitle>
+        <CardDescription>
+          Use your fingerprint or face to quickly sign back in to your account
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {credentials.length > 0 && (
+          <div className="space-y-3">
+            <Label>Registered Devices</Label>
+            {credentials.map((cred) => (
+              <div key={cred.id} className="flex items-center justify-between p-3 rounded-lg border bg-muted/50">
+                <div className="flex items-center gap-3">
+                  <Smartphone className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">{cred.device_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Added {new Date(cred.created_at).toLocaleDateString()}
+                      {cred.last_used_at && ` · Last used ${new Date(cred.last_used_at).toLocaleDateString()}`}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => handleRemove(cred.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <Label htmlFor="device-name">Device Name (optional)</Label>
+          <Input
+            id="device-name"
+            placeholder="e.g. My iPhone, Work Laptop"
+            value={deviceName}
+            onChange={(e) => setDeviceName(e.target.value)}
+          />
+        </div>
+
+        <Button onClick={handleRegister} disabled={loading} className="gap-2">
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Fingerprint className="h-4 w-4" />
+          )}
+          {credentials.length > 0 ? 'Add Another Device' : 'Enable Biometric Sign-In'}
+        </Button>
       </CardContent>
     </Card>
   );
@@ -345,19 +450,13 @@ export default function Settings() {
           </TabsContent>
 
           <TabsContent value="security">
-            <Card>
-              <CardHeader>
-                <CardTitle>Security Settings</CardTitle>
-                <CardDescription>Manage your password and security preferences</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium">Password</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Change your password by requesting a reset link
-                    </p>
-                  </div>
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Password</CardTitle>
+                  <CardDescription>Change your password by requesting a reset link</CardDescription>
+                </CardHeader>
+                <CardContent>
                   <Button onClick={handleChangePassword} variant="outline" disabled={saving}>
                     {saving ? (
                       <>
@@ -368,9 +467,11 @@ export default function Settings() {
                       'Send Password Reset Email'
                     )}
                   </Button>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+
+              <BiometricSettingsCard />
+            </div>
           </TabsContent>
 
           <TabsContent value="notifications">

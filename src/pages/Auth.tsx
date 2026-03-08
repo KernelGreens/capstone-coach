@@ -7,7 +7,50 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { GraduationCap, Loader2 } from 'lucide-react';
+import { GraduationCap, Loader2, Fingerprint } from 'lucide-react';
+import { useBiometricAuth } from '@/hooks/use-biometric-auth';
+
+function BiometricLoginButton({ email }: { email: string }) {
+  const navigate = useNavigate();
+  const { isSupported, loading, authenticateWithBiometric } = useBiometricAuth();
+
+  if (!isSupported) return null;
+
+  const handleBiometricLogin = async () => {
+    if (!email) return;
+    const success = await authenticateWithBiometric(email);
+    if (success) {
+      navigate('/dashboard');
+    }
+  };
+
+  return (
+    <>
+      <div className="relative my-2">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-card px-2 text-muted-foreground">or</span>
+        </div>
+      </div>
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full gap-2"
+        onClick={handleBiometricLogin}
+        disabled={loading || !email}
+      >
+        {loading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Fingerprint className="h-4 w-4" />
+        )}
+        Sign in with Biometrics
+      </Button>
+    </>
+  );
+}
 
 export default function Auth() {
   const [loading, setLoading] = useState(false);
@@ -329,6 +372,7 @@ export default function Auth() {
                       'Sign In'
                     )}
                   </Button>
+                  <BiometricLoginButton email={email} />
                   <div className="text-center">
                     <Button
                       type="button"
