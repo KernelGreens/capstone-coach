@@ -19,7 +19,8 @@ import {
     MessageCircle,
     Menu,
     X,
-    Briefcase
+    Briefcase,
+    Trophy
 } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
 import { cn } from '@/lib/utils';
@@ -49,6 +50,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { href: '/evaluations', label: 'Evaluations', icon: BarChart3 },
     { href: '/analytics', label: 'Analytics', icon: TrendingUp },
     { href: '/progress', label: 'Progress', icon: FileText },
+    { href: '/capstone', label: 'Capstone', icon: Trophy },
     { href: '/resources', label: 'Resources', icon: Library },
     ...(isSuperAdmin
       ? [{ href: '/feedback', label: 'User Feedback', icon: MessageSquareHeart }]
@@ -61,6 +63,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { href: '/my-evaluations', label: 'My Evaluations', icon: BarChart3 },
     { href: '/meetings', label: 'Meetings', icon: Calendar },
     { href: '/messages', label: 'Messages', icon: MessageCircle },
+    { href: '/capstone', label: 'Capstone', icon: Trophy },
     { href: '/resources', label: 'Resources', icon: Library },
     { href: '/portfolio', label: 'Portfolio', icon: Briefcase },
     { href: '/submit-feedback', label: 'Feedback', icon: MessageSquareHeart },
