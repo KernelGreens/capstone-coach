@@ -375,27 +375,48 @@ export default function Meetings() {
                       {meeting.description}
                     </p>
                   )}
-                  {userRole === 'supervisor' && (
-                    <div className="flex gap-2 pt-3 border-t">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => handleEdit(meeting)}
-                      >
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Edit
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => handleDeleteClick(meeting)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
+                  <div className="flex flex-col gap-2 pt-3 border-t">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => handleGenerateSlides(meeting)}
+                      disabled={generatingSlides === meeting.id}
+                    >
+                      {generatingSlides === meeting.id ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generating Slides...
+                        </>
+                      ) : (
+                        <>
+                          <Presentation className="mr-2 h-4 w-4" />
+                          Generate Slides
+                        </>
+                      )}
+                    </Button>
+                    {userRole === 'supervisor' && (
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => handleEdit(meeting)}
+                        >
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleDeleteClick(meeting)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
