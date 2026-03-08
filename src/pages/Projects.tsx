@@ -565,16 +565,16 @@ export default function Projects() {
                     <span className="text-sm text-muted-foreground">• Week {viewProject.week_number}</span>
                   )}
                 </div>
-                {viewProject.description && (
-                  <div>
-                    <h4 className="font-semibold mb-2">Description</h4>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{viewProject.description}</p>
-                  </div>
-                )}
                 {viewProject.objectives && (
                   <div>
                     <h4 className="font-semibold mb-2">Learning Objectives</h4>
                     <p className="text-sm text-muted-foreground whitespace-pre-wrap">{viewProject.objectives}</p>
+                  </div>
+                )}
+                {viewProject.description && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Tasks</h4>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{viewProject.description}</p>
                   </div>
                 )}
                 {viewProject.deliverables && (
