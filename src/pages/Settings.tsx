@@ -533,6 +533,7 @@ export default function Settings() {
                   <p className="text-xs text-muted-foreground">
                     Used for morning meeting reminders at ~7 AM your time
                   </p>
+                </div>
 
                 <Button onClick={handleSaveProfile} disabled={saving}>
                   {saving ? (
