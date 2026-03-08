@@ -139,8 +139,8 @@ export default function Evaluations() {
 
   const getStatusBadge = (progress: WeeklyProgress) => {
     if (progress.score_approved) return <Badge variant="secondary">Scored</Badge>;
-    if (progress.status === 'completed') return <Badge className="bg-green-100 text-green-800">Completed</Badge>;
-    if (progress.status === 'pending') return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
+    if (progress.status === 'completed') return <Badge variant="default">Completed</Badge>;
+    if (progress.status === 'pending') return <Badge variant="outline">Pending</Badge>;
     return <Badge variant="outline">{progress.status}</Badge>;
   };
 
