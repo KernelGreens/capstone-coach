@@ -11,8 +11,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Target, Edit2, Trash2, Loader2, Search, Users, BookOpen, Sparkles } from 'lucide-react';
+import { Plus, Target, Edit2, Trash2, Loader2, Search, Users, BookOpen, Sparkles, ClipboardList } from 'lucide-react';
 import { CurriculumGeneratorDialog } from '@/components/tracks/CurriculumGeneratorDialog';
+import { ManualCurriculumDialog } from '@/components/tracks/ManualCurriculumDialog';
 
 export default function Tracks() {
   const { user } = useAuth();
