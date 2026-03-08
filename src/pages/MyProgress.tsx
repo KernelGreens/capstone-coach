@@ -92,7 +92,7 @@ export default function MyProgress() {
       <DashboardLayout>
         <div className="space-y-6">
           <Skeleton className="h-12 w-64" />
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
             {[...Array(4)].map((_, i) => (
               <Skeleton key={i} className="h-24" />
             ))}
