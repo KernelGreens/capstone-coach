@@ -54,6 +54,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { href: '/progress', label: 'Progress', icon: FileText },
     { href: '/capstone', label: 'Capstone', icon: Trophy },
     { href: '/resources', label: 'Resources', icon: Library },
+    { href: '/marketplace', label: 'Marketplace', icon: Store },
     ...(isSuperAdmin
       ? [{ href: '/feedback', label: 'User Feedback', icon: MessageSquareHeart }]
       : [{ href: '/submit-feedback', label: 'Feedback', icon: MessageSquareHeart }]),
