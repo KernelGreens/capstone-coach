@@ -114,6 +114,7 @@ export type Database = {
         Row: {
           category: string
           created_at: string
+          created_by: string
           criterion: string
           id: string
           max_score: number
@@ -124,6 +125,7 @@ export type Database = {
         Insert: {
           category: string
           created_at?: string
+          created_by: string
           criterion: string
           id?: string
           max_score?: number
@@ -134,6 +136,7 @@ export type Database = {
         Update: {
           category?: string
           created_at?: string
+          created_by?: string
           criterion?: string
           id?: string
           max_score?: number
