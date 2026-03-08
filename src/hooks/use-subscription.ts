@@ -6,6 +6,7 @@ interface SubscriptionState {
   subscribed: boolean;
   isExcluded: boolean;
   maxStudents: number;
+  productId: string | null;
   subscriptionEnd: string | null;
   loading: boolean;
 }
@@ -16,6 +17,7 @@ export function useSubscription() {
     subscribed: false,
     isExcluded: false,
     maxStudents: 1,
+    productId: null,
     subscriptionEnd: null,
     loading: true,
   });
@@ -34,6 +36,7 @@ export function useSubscription() {
         subscribed: data.subscribed,
         isExcluded: data.is_excluded || false,
         maxStudents: data.max_students,
+        productId: data.product_id || null,
         subscriptionEnd: data.subscription_end,
         loading: false,
       });

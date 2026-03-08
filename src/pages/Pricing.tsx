@@ -7,33 +7,48 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Check, Crown, Loader2, Users, Zap } from 'lucide-react';
+import { Check, Crown, Loader2, Users, Zap, Gem } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const PRICES = {
-  monthly: 'price_1T8pkiGlS9Id5o6zPfOGdTjP',
-  annual: 'price_1T8plCGlS9Id5o6z0FUPeH5z',
+  pro_monthly: 'price_1T8pkiGlS9Id5o6zPfOGdTjP',
+  pro_annual: 'price_1T8plCGlS9Id5o6z0FUPeH5z',
+  premium_monthly: 'price_1T8q3PGlS9Id5o6znOLWQPg9',
+  premium_annual: 'price_1T8q3lGlS9Id5o6zIEFpU4z2',
+};
+
+export const PRODUCT_IDS = {
+  pro_monthly: 'prod_U73snos34o73rK',
+  pro_annual: 'prod_U73sNZTbvAiTsa',
+  premium_monthly: 'prod_U74B4nS5LsUWIU',
+  premium_annual: 'prod_U74C240Qcx85oz',
 };
 
 export default function Pricing() {
   const { user, userRole } = useAuth();
-  const { subscribed, isExcluded, loading, createCheckout, openCustomerPortal } = useSubscription();
+  const { subscribed, isExcluded, loading, productId, createCheckout, openCustomerPortal } = useSubscription();
   const [annual, setAnnual] = useState(false);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const handleSubscribe = async () => {
+  const isPro = subscribed && (productId === PRODUCT_IDS.pro_monthly || productId === PRODUCT_IDS.pro_annual);
+  const isPremium = subscribed && (productId === PRODUCT_IDS.premium_monthly || productId === PRODUCT_IDS.premium_annual);
+
+  const handleSubscribe = async (tier: 'pro' | 'premium') => {
     if (!user) {
       navigate('/auth');
       return;
     }
-    setCheckoutLoading(true);
+    setCheckoutLoading(tier);
     try {
-      await createCheckout(annual ? PRICES.annual : PRICES.monthly);
+      const priceId = tier === 'pro'
+        ? (annual ? PRICES.pro_annual : PRICES.pro_monthly)
+        : (annual ? PRICES.premium_annual : PRICES.premium_monthly);
+      await createCheckout(priceId);
     } catch (error) {
       console.error('Checkout error:', error);
     } finally {
-      setCheckoutLoading(false);
+      setCheckoutLoading(null);
     }
   };
 
@@ -56,12 +71,65 @@ export default function Pricing() {
     'Priority support',
   ];
 
+  const premiumFeatures = [
+    'Unlimited active students',
+    'Everything in Pro',
+    'Advanced analytics',
+    'Custom branding',
+    'Dedicated support',
+    'API access',
+  ];
+
+  const renderPlanButton = (tier: 'free' | 'pro' | 'premium') => {
+    if (loading) {
+      return (
+        <Button className="w-full" disabled>
+          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          Loading...
+        </Button>
+      );
+    }
+    if (isExcluded) {
+      return (
+        <Button className="w-full" disabled variant="outline">
+          Unlimited Access Granted
+        </Button>
+      );
+    }
+
+    if (tier === 'free') {
+      return !subscribed ? (
+        <Button variant="outline" className="w-full" disabled>Your current plan</Button>
+      ) : (
+        <Button variant="outline" className="w-full" disabled>Free</Button>
+      );
+    }
+
+    if (tier === 'pro') {
+      return isPro ? (
+        <Button className="w-full" variant="outline" onClick={openCustomerPortal}>Manage Subscription</Button>
+      ) : (
+        <Button className="w-full" onClick={() => handleSubscribe('pro')} disabled={!!checkoutLoading}>
+          {checkoutLoading === 'pro' ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Redirecting...</> : 'Upgrade to Pro'}
+        </Button>
+      );
+    }
+
+    return isPremium ? (
+      <Button className="w-full" variant="outline" onClick={openCustomerPortal}>Manage Subscription</Button>
+    ) : (
+      <Button className="w-full" onClick={() => handleSubscribe('premium')} disabled={!!checkoutLoading}>
+        {checkoutLoading === 'premium' ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Redirecting...</> : 'Upgrade to Premium'}
+      </Button>
+    );
+  };
+
   const content = (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-6xl mx-auto space-y-8">
       <div className="text-center space-y-3">
         <h1 className="text-3xl font-bold tracking-tight">Choose Your Plan</h1>
         <p className="text-muted-foreground max-w-lg mx-auto">
-          Start free with 1 student. Upgrade to Pro when you're ready to scale your mentorship program.
+          Start free with 1 student. Scale your mentorship program with Pro or go unlimited with Premium.
         </p>
       </div>
 
@@ -74,7 +142,7 @@ export default function Pricing() {
         </Label>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-3 gap-6">
         {/* Free Plan */}
         <Card className={`relative ${!subscribed && !isExcluded ? 'border-primary ring-2 ring-primary/20' : ''}`}>
           {!subscribed && !isExcluded && (
@@ -102,25 +170,14 @@ export default function Pricing() {
             </ul>
           </CardContent>
           <CardFooter>
-            {!subscribed && !isExcluded ? (
-              <Button variant="outline" className="w-full" disabled>
-                Your current plan
-              </Button>
-            ) : (
-              <Button variant="outline" className="w-full" disabled>
-                Free
-              </Button>
-            )}
+            {renderPlanButton('free')}
           </CardFooter>
         </Card>
 
         {/* Pro Plan */}
-        <Card className={`relative ${subscribed ? 'border-primary ring-2 ring-primary/20' : 'border-2'}`}>
-          {subscribed && !isExcluded && (
+        <Card className={`relative ${isPro ? 'border-primary ring-2 ring-primary/20' : 'border-2'}`}>
+          {isPro && !isExcluded && (
             <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Current Plan</Badge>
-          )}
-          {isExcluded && (
-            <Badge className="absolute -top-3 left-1/2 -translate-x-1/2" variant="secondary">Unlimited Access</Badge>
           )}
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -154,31 +211,51 @@ export default function Pricing() {
             </ul>
           </CardContent>
           <CardFooter>
-            {loading ? (
-              <Button className="w-full" disabled>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Loading...
-              </Button>
-            ) : isExcluded ? (
-              <Button className="w-full" disabled variant="outline">
-                Unlimited Access Granted
-              </Button>
-            ) : subscribed ? (
-              <Button className="w-full" variant="outline" onClick={openCustomerPortal}>
-                Manage Subscription
-              </Button>
-            ) : (
-              <Button className="w-full" onClick={handleSubscribe} disabled={checkoutLoading}>
-                {checkoutLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Redirecting...
-                  </>
-                ) : (
-                  'Upgrade to Pro'
-                )}
-              </Button>
-            )}
+            {renderPlanButton('pro')}
+          </CardFooter>
+        </Card>
+
+        {/* Premium Plan */}
+        <Card className={`relative ${isPremium ? 'border-primary ring-2 ring-primary/20' : 'border-2'}`}>
+          {isPremium && !isExcluded && (
+            <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Current Plan</Badge>
+          )}
+          {isExcluded && (
+            <Badge className="absolute -top-3 left-1/2 -translate-x-1/2" variant="secondary">Unlimited Access</Badge>
+          )}
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Gem className="h-5 w-5 text-primary" />
+              Premium
+            </CardTitle>
+            <CardDescription>For large-scale programs</CardDescription>
+            <div className="pt-2">
+              {annual ? (
+                <>
+                  <span className="text-4xl font-bold">$19.99</span>
+                  <span className="text-muted-foreground">/month</span>
+                  <p className="text-sm text-muted-foreground mt-1">$239.90 billed annually</p>
+                </>
+              ) : (
+                <>
+                  <span className="text-4xl font-bold">$24.99</span>
+                  <span className="text-muted-foreground">/month</span>
+                </>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-3">
+              {premiumFeatures.map((feature) => (
+                <li key={feature} className="flex items-start gap-2">
+                  <Gem className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                  <span className="text-sm">{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+          <CardFooter>
+            {renderPlanButton('premium')}
           </CardFooter>
         </Card>
       </div>

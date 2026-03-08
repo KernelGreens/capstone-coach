@@ -12,6 +12,12 @@ const EXCLUDED_EMAILS = [
   "abiodunahmadaws@gmail.com",
 ];
 
+// Premium product IDs get unlimited students
+const PREMIUM_PRODUCT_IDS = [
+  "prod_U74B4nS5LsUWIU", // Premium Monthly
+  "prod_U74C240Qcx85oz", // Premium Annual
+];
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -33,12 +39,12 @@ serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated");
 
-    // Excluded emails get unlimited access
     if (EXCLUDED_EMAILS.includes(user.email.toLowerCase())) {
       return new Response(JSON.stringify({
         subscribed: true,
         is_excluded: true,
         max_students: 999,
+        product_id: null,
         subscription_end: null,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -56,6 +62,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         subscribed: false,
         max_students: 1,
+        product_id: null,
         subscription_end: null,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -67,20 +74,30 @@ serve(async (req) => {
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: "active",
-      limit: 1,
+      limit: 10,
     });
 
     const hasActiveSub = subscriptions.data.length > 0;
     let subscriptionEnd = null;
+    let productId = null;
+    let maxStudents = 1;
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
       subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+      productId = subscription.items.data[0].price.product as string;
+
+      if (PREMIUM_PRODUCT_IDS.includes(productId)) {
+        maxStudents = 999; // unlimited
+      } else {
+        maxStudents = 10; // Pro
+      }
     }
 
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
-      max_students: hasActiveSub ? 10 : 1,
+      max_students: maxStudents,
+      product_id: productId,
       subscription_end: subscriptionEnd,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
