@@ -7,11 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, User, Mail, Camera, Shield, Bell, BellRing, BellOff } from 'lucide-react';
+import { Loader2, User, Mail, Camera, Shield, Bell, BellRing, BellOff, Fingerprint, Smartphone, Trash2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
+import { useBiometricAuth } from '@/hooks/use-biometric-auth';
 
 function NotificationsTab() {
   const { isSupported, isSubscribed, permission, loading, subscribe, unsubscribe } = usePushNotifications();
