@@ -28,6 +28,7 @@ export default function Tracks() {
   const [selectedTrack, setSelectedTrack] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [curriculumOpen, setCurriculumOpen] = useState(false);
+  const [manualCurriculumOpen, setManualCurriculumOpen] = useState(false);
   const [curriculumTrack, setCurriculumTrack] = useState<any>(null);
   const { toast } = useToast();
 
