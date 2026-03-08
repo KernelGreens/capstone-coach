@@ -346,19 +346,13 @@ export default function Settings() {
           </TabsContent>
 
           <TabsContent value="security">
-            <Card>
-              <CardHeader>
-                <CardTitle>Security Settings</CardTitle>
-                <CardDescription>Manage your password and security preferences</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium">Password</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Change your password by requesting a reset link
-                    </p>
-                  </div>
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Password</CardTitle>
+                  <CardDescription>Change your password by requesting a reset link</CardDescription>
+                </CardHeader>
+                <CardContent>
                   <Button onClick={handleChangePassword} variant="outline" disabled={saving}>
                     {saving ? (
                       <>
@@ -369,9 +363,11 @@ export default function Settings() {
                       'Send Password Reset Email'
                     )}
                   </Button>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+
+              <BiometricSettingsCard />
+            </div>
           </TabsContent>
 
           <TabsContent value="notifications">
