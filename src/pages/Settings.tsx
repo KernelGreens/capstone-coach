@@ -13,6 +13,84 @@ import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 
+function NotificationsTab() {
+  const { isSupported, isSubscribed, permission, loading, subscribe, unsubscribe } = usePushNotifications();
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Notification Preferences</CardTitle>
+        <CardDescription>Configure how you receive notifications</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Push Notifications */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2">
+              {isSubscribed ? (
+                <BellRing className="h-4 w-4 text-primary" />
+              ) : (
+                <BellOff className="h-4 w-4 text-muted-foreground" />
+              )}
+              <Label>Push Notifications</Label>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {!isSupported
+                ? 'Push notifications are not supported in your browser'
+                : permission === 'denied'
+                ? 'Notifications are blocked. Please enable them in your browser settings.'
+                : isSubscribed
+                ? 'You are receiving push notifications for meetings, deadlines, and updates'
+                : 'Enable push notifications to stay updated on meetings and deadlines'}
+            </p>
+          </div>
+          {isSupported && permission !== 'denied' && (
+            <Button
+              variant={isSubscribed ? 'outline' : 'default'}
+              size="sm"
+              onClick={isSubscribed ? unsubscribe : subscribe}
+              disabled={loading}
+            >
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              {isSubscribed ? 'Disable' : 'Enable'}
+            </Button>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label>Email Notifications</Label>
+            <p className="text-sm text-muted-foreground">
+              Receive email notifications for important updates
+            </p>
+          </div>
+          <Switch defaultChecked />
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label>Progress Reminders</Label>
+            <p className="text-sm text-muted-foreground">
+              Get reminded about weekly progress submissions
+            </p>
+          </div>
+          <Switch defaultChecked />
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label>Meeting Reminders</Label>
+            <p className="text-sm text-muted-foreground">
+              Receive reminders before scheduled meetings
+            </p>
+          </div>
+          <Switch defaultChecked />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Settings() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
