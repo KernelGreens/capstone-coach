@@ -330,6 +330,7 @@ export default function Auth() {
                       'Sign In'
                     )}
                   </Button>
+                  <BiometricLoginButton email={email} />
                   <div className="text-center">
                     <Button
                       type="button"
