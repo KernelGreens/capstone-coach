@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { LayoutDashboard, FileText, MessageCircle, BookOpen, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, FileText, MessageCircle, BookOpen, BarChart3, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function MobileBottomNav() {
