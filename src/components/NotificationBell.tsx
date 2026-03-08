@@ -58,8 +58,16 @@ export function NotificationBell() {
           table: 'notifications',
           filter: `user_id=eq.${user?.id}`,
         },
-        () => {
+        (payload) => {
           fetchNotifications();
+          // Show browser notification if permission granted
+          if ('Notification' in window && Notification.permission === 'granted') {
+            const notif = payload.new as any;
+            new Notification(notif.title || 'Capstone Coach', {
+              body: notif.message,
+              icon: '/pwa-icon-192.png',
+            });
+          }
         }
       )
       .subscribe();
