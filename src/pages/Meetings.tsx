@@ -16,9 +16,11 @@ import {
   Pencil,
   Trash2,
   User,
+  Presentation,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { generatePptx } from '@/lib/generatePptx';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,6 +66,7 @@ export default function Meetings() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [meetingToDelete, setMeetingToDelete] = useState<Meeting | null>(null);
   const [saving, setSaving] = useState(false);
+  const [generatingSlides, setGeneratingSlides] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -217,6 +220,49 @@ export default function Meetings() {
     setMeetingToDelete(null);
   };
 
+  const handleGenerateSlides = async (meeting: Meeting) => {
+    setGeneratingSlides(meeting.id);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-meeting-slides`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            meetingTitle: meeting.title,
+            meetingDescription: meeting.description || '',
+            studentName: meeting.student_profile?.full_name || 'Student',
+            scheduledAt: format(new Date(meeting.scheduled_at), 'PPP p'),
+          }),
+        }
+      );
+
+      if (response.status === 429) {
+        toast({ variant: 'destructive', title: 'Rate limited', description: 'Please try again in a moment.' });
+        return;
+      }
+      if (response.status === 402) {
+        toast({ variant: 'destructive', title: 'Credits exhausted', description: 'Please add AI credits in your workspace settings.' });
+        return;
+      }
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to generate slides');
+
+      await generatePptx(data.slides, meeting.title);
+
+      toast({ title: 'Slides generated!', description: 'Your PowerPoint presentation has been downloaded.' });
+    } catch (error: any) {
+      console.error('Error generating slides:', error);
+      toast({ variant: 'destructive', title: 'Generation failed', description: error.message });
+    } finally {
+      setGeneratingSlides(null);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'scheduled':
@@ -329,27 +375,48 @@ export default function Meetings() {
                       {meeting.description}
                     </p>
                   )}
-                  {userRole === 'supervisor' && (
-                    <div className="flex gap-2 pt-3 border-t">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => handleEdit(meeting)}
-                      >
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Edit
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => handleDeleteClick(meeting)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
+                  <div className="flex flex-col gap-2 pt-3 border-t">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => handleGenerateSlides(meeting)}
+                      disabled={generatingSlides === meeting.id}
+                    >
+                      {generatingSlides === meeting.id ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generating Slides...
+                        </>
+                      ) : (
+                        <>
+                          <Presentation className="mr-2 h-4 w-4" />
+                          Generate Slides
+                        </>
+                      )}
+                    </Button>
+                    {userRole === 'supervisor' && (
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => handleEdit(meeting)}
+                        >
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleDeleteClick(meeting)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
