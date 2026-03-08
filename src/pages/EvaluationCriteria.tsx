@@ -55,6 +55,7 @@ export default function EvaluationCriteria() {
     weight: '1',
     max_score: '10',
   });
+  const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
