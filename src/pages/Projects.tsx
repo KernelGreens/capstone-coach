@@ -248,10 +248,10 @@ export default function Projects() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between print:hidden" id="projects-header">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 print:hidden" id="projects-header">
           <div>
-            <h1 className="text-3xl font-bold">Projects Management</h1>
-            <p className="text-muted-foreground">Define projects and assignments for each track</p>
+            <h1 className="text-2xl sm:text-3xl font-bold">Projects Management</h1>
+            <p className="text-sm text-muted-foreground">Define projects and assignments for each track</p>
           </div>
            <div className="flex gap-2">
             <DropdownMenu>
