@@ -45,6 +45,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { href: '/meetings', label: 'Meetings', icon: Calendar },
     { href: '/messages', label: 'Messages', icon: MessageCircle },
     { href: '/evaluations', label: 'Evaluations', icon: BarChart3 },
+    { href: '/analytics', label: 'Analytics', icon: TrendingUp },
     { href: '/progress', label: 'Progress', icon: FileText },
     { href: '/resources', label: 'Resources', icon: Library },
     ...(isSuperAdmin
