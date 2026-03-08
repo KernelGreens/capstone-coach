@@ -523,7 +523,13 @@ export default function Settings() {
                       <SelectValue placeholder="Select timezone" />
                     </SelectTrigger>
                     <SelectContent className="max-h-60">
-                      {Intl.supportedValuesOf('timeZone').map((tz) => (
+                      {[
+                        'UTC','Africa/Lagos','Africa/Cairo','Africa/Johannesburg','Africa/Nairobi',
+                        'America/New_York','America/Chicago','America/Denver','America/Los_Angeles',
+                        'America/Sao_Paulo','America/Toronto','Asia/Dubai','Asia/Kolkata','Asia/Shanghai',
+                        'Asia/Tokyo','Asia/Singapore','Australia/Sydney','Europe/London','Europe/Berlin',
+                        'Europe/Paris','Europe/Moscow','Pacific/Auckland',
+                      ].map((tz) => (
                         <SelectItem key={tz} value={tz}>
                           {tz.replace(/_/g, ' ')}
                         </SelectItem>
