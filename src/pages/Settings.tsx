@@ -412,6 +412,10 @@ export default function Settings() {
               <Bell className="h-4 w-4" />
               Notifications
             </TabsTrigger>
+            <TabsTrigger value="general" className="gap-2">
+              <RotateCcw className="h-4 w-4" />
+              General
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile">
