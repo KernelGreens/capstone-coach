@@ -124,7 +124,7 @@ export default function Pricing() {
           )}
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Crown className="h-5 w-5 text-yellow-500" />
+              <Crown className="h-5 w-5 text-primary" />
               Pro
             </CardTitle>
             <CardDescription>For growing mentorship programs</CardDescription>
