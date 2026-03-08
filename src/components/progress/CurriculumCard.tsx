@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, Target, Wrench, FileCheck } from 'lucide-react';
 import { WeeklyResourcesSection } from './WeeklyResourcesSection';
+import { LessonList } from '@/components/lessons/LessonList';
 
 interface CurriculumCardProps {
   project: any;
