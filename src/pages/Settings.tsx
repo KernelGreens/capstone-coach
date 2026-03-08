@@ -271,6 +271,7 @@ export default function Settings() {
     full_name: '',
     email: '',
     avatar_url: '',
+    timezone: '',
   });
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const { toast } = useToast();
