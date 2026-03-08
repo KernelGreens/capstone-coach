@@ -1,0 +1,1 @@
+ALTER TABLE public.weekly_progress ADD COLUMN learning_hours numeric DEFAULT 0;

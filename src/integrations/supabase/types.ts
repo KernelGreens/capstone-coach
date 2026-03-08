@@ -853,6 +853,7 @@ export type Database = {
           created_at: string
           deliverables_submitted: boolean | null
           id: string
+          learning_hours: number | null
           project_id: string | null
           score_approved: boolean | null
           score_approved_at: string | null
@@ -871,6 +872,7 @@ export type Database = {
           created_at?: string
           deliverables_submitted?: boolean | null
           id?: string
+          learning_hours?: number | null
           project_id?: string | null
           score_approved?: boolean | null
           score_approved_at?: string | null
@@ -889,6 +891,7 @@ export type Database = {
           created_at?: string
           deliverables_submitted?: boolean | null
           id?: string
+          learning_hours?: number | null
           project_id?: string | null
           score_approved?: boolean | null
           score_approved_at?: string | null
