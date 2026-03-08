@@ -21,6 +21,7 @@ import Settings from "./pages/Settings";
 import EvaluationCriteria from "./pages/EvaluationCriteria";
 import SubmitFeedback from "./pages/SubmitFeedback";
 import ViewFeedback from "./pages/ViewFeedback";
+import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
