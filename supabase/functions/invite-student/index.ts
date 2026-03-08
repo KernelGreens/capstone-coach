@@ -52,6 +52,47 @@ serve(async (req) => {
     const { email, full_name, track_id, start_date, end_date } = await req.json();
     console.log('Inviting student:', { email, full_name, track_id });
 
+    // Check student limit based on subscription
+    const EXCLUDED_EMAILS = ['abiodunodukaye@gmail.com', 'abiodunahmadaws@gmail.com'];
+    const supervisorEmail = supervisor.email || '';
+    
+    if (!EXCLUDED_EMAILS.includes(supervisorEmail.toLowerCase())) {
+      const { count, error: countError } = await supabaseAdmin
+        .from('students')
+        .select('id', { count: 'exact', head: true })
+        .eq('supervisor_id', supervisor.id)
+        .eq('status', 'active');
+
+      if (countError) throw countError;
+      const activeStudents = count || 0;
+
+      const Stripe = (await import("https://esm.sh/stripe@18.5.0")).default;
+      const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+        apiVersion: '2025-08-27.basil',
+      });
+
+      let maxStudents = 1;
+      const customers = await stripe.customers.list({ email: supervisorEmail, limit: 1 });
+      if (customers.data.length > 0) {
+        const subscriptions = await stripe.subscriptions.list({
+          customer: customers.data[0].id,
+          status: 'active',
+          limit: 1,
+        });
+        if (subscriptions.data.length > 0) {
+          maxStudents = 10;
+        }
+      }
+
+      if (activeStudents >= maxStudents) {
+        throw new Error(
+          maxStudents === 1
+            ? 'Free plan allows only 1 active student. Upgrade to Pro to add more.'
+            : `Pro plan allows up to ${maxStudents} active students. You have ${activeStudents}.`
+        );
+      }
+    }
+
     // Generate temporary password
     const tempPassword = crypto.randomUUID().slice(0, 12);
 

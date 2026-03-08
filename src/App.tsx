@@ -26,6 +26,7 @@ import Analytics from "./pages/Analytics";
 import Portfolio from "./pages/Portfolio";
 import CapstoneProject from "./pages/CapstoneProject";
 import Marketplace from "./pages/Marketplace";
+import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -59,6 +60,7 @@ const App = () => (
             <Route path="/portfolio" element={<Portfolio />} />
             <Route path="/capstone" element={<ProtectedRoute><CapstoneProject /></ProtectedRoute>} />
             <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
+            <Route path="/pricing" element={<Pricing />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

@@ -21,7 +21,8 @@ import {
   X,
   Briefcase,
   Trophy,
-  Store
+  Store,
+  Crown
 } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
 import { cn } from '@/lib/utils';
@@ -55,6 +56,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { href: '/capstone', label: 'Capstone', icon: Trophy },
     { href: '/resources', label: 'Resources', icon: Library },
     { href: '/marketplace', label: 'Marketplace', icon: Store },
+    { href: '/pricing', label: 'Pricing', icon: Crown },
     ...(isSuperAdmin
       ? [{ href: '/feedback', label: 'User Feedback', icon: MessageSquareHeart }]
       : [{ href: '/submit-feedback', label: 'Feedback', icon: MessageSquareHeart }]),
