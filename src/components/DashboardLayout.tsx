@@ -16,9 +16,10 @@ import {
   BarChart3,
   TrendingUp,
   MessageSquareHeart,
-  MessageCircle,
-  Menu,
-  X
+    MessageCircle,
+    Menu,
+    X,
+    Briefcase
 } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
 import { cn } from '@/lib/utils';
