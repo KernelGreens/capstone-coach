@@ -58,6 +58,7 @@ const App = () => (
             <Route path="/analytics" element={<ProtectedRoute allowedRoles={['supervisor']}><Analytics /></ProtectedRoute>} />
             <Route path="/portfolio" element={<Portfolio />} />
             <Route path="/capstone" element={<ProtectedRoute><CapstoneProject /></ProtectedRoute>} />
+            <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
