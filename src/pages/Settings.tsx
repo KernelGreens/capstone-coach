@@ -302,6 +302,7 @@ export default function Settings() {
         full_name: data.full_name || '',
         email: data.email || '',
         avatar_url: data.avatar_url || '',
+        timezone: (data as any).timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
       });
     }
     setLoading(false);
