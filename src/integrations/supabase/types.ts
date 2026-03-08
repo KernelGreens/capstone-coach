@@ -14,6 +14,187 @@ export type Database = {
   }
   public: {
     Tables: {
+      capstone_milestones: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          display_order: number
+          due_date: string | null
+          feedback: string | null
+          id: string
+          proposal_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          due_date?: string | null
+          feedback?: string | null
+          id?: string
+          proposal_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          due_date?: string | null
+          feedback?: string | null
+          id?: string
+          proposal_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capstone_milestones_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "capstone_proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      capstone_presentations: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          evaluated_at: string | null
+          evaluated_by: string | null
+          evaluation_notes: string | null
+          evaluation_score: number | null
+          id: string
+          location: string | null
+          meeting_link: string | null
+          presentation_notes: string | null
+          proposal_id: string
+          scheduled_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number
+          evaluated_at?: string | null
+          evaluated_by?: string | null
+          evaluation_notes?: string | null
+          evaluation_score?: number | null
+          id?: string
+          location?: string | null
+          meeting_link?: string | null
+          presentation_notes?: string | null
+          proposal_id: string
+          scheduled_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          evaluated_at?: string | null
+          evaluated_by?: string | null
+          evaluation_notes?: string | null
+          evaluation_score?: number | null
+          id?: string
+          location?: string | null
+          meeting_link?: string | null
+          presentation_notes?: string | null
+          proposal_id?: string
+          scheduled_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capstone_presentations_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "capstone_proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      capstone_proposals: {
+        Row: {
+          abstract: string | null
+          approved_by: string | null
+          created_at: string
+          expected_outcomes: string | null
+          id: string
+          methodology: string | null
+          objectives: string | null
+          project_id: string | null
+          reviewed_at: string | null
+          reviewer_notes: string | null
+          status: string
+          student_id: string
+          submitted_at: string | null
+          timeline: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          abstract?: string | null
+          approved_by?: string | null
+          created_at?: string
+          expected_outcomes?: string | null
+          id?: string
+          methodology?: string | null
+          objectives?: string | null
+          project_id?: string | null
+          reviewed_at?: string | null
+          reviewer_notes?: string | null
+          status?: string
+          student_id: string
+          submitted_at?: string | null
+          timeline?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          abstract?: string | null
+          approved_by?: string | null
+          created_at?: string
+          expected_outcomes?: string | null
+          id?: string
+          methodology?: string | null
+          objectives?: string | null
+          project_id?: string | null
+          reviewed_at?: string | null
+          reviewer_notes?: string | null
+          status?: string
+          student_id?: string
+          submitted_at?: string | null
+          timeline?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capstone_proposals_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capstone_proposals_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           author_id: string
