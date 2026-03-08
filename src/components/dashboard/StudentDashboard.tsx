@@ -3,10 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { FileText, Target, TrendingUp, Calendar } from 'lucide-react';
+import { FileText, TrendingUp, Calendar, MessageCircle, BookOpen, Trophy, Bell, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function StudentDashboard() {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [stats, setStats] = useState({
     currentWeek: 0,
     totalWeeks: 16,
@@ -36,6 +39,13 @@ export function StudentDashboard() {
       .eq('student_id', studentData.id)
       .order('week_number', { ascending: false });
 
+    const { data: meetingsData } = await supabase
+      .from('meetings')
+      .select('id')
+      .eq('student_id', studentData.id)
+      .eq('status', 'scheduled')
+      .gte('scheduled_at', new Date().toISOString());
+
     const currentWeek = progressData?.[0]?.week_number || 0;
     const completed = progressData?.filter((p) => p.status === 'completed').length || 0;
     const avgScore =
@@ -48,82 +58,123 @@ export function StudentDashboard() {
       totalWeeks: 16,
       completedTasks: completed,
       avgScore: Math.round(avgScore * 10) / 10,
-      upcomingMeetings: 0,
+      upcomingMeetings: meetingsData?.length || 0,
     });
   };
 
   const progress = (stats.currentWeek / stats.totalWeeks) * 100;
 
+  const quickActions = [
+    { href: '/my-progress', label: 'My Progress', icon: FileText, color: 'text-emerald-500', bg: 'bg-emerald-500/10', desc: `Week ${stats.currentWeek}` },
+    { href: '/messages', label: 'Mentor Chat', icon: MessageCircle, color: 'text-blue-500', bg: 'bg-blue-500/10', desc: 'Send a message' },
+    { href: '/resources', label: 'Learn', icon: BookOpen, color: 'text-amber-500', bg: 'bg-amber-500/10', desc: 'View modules' },
+    { href: '/meetings', label: 'Meetings', icon: Calendar, color: 'text-purple-500', bg: 'bg-purple-500/10', desc: `${stats.upcomingMeetings} upcoming` },
+    { href: '/capstone', label: 'Capstone', icon: Trophy, color: 'text-rose-500', bg: 'bg-rose-500/10', desc: 'Final project' },
+    { href: '/settings', label: 'Reminders', icon: Bell, color: 'text-cyan-500', bg: 'bg-cyan-500/10', desc: 'Notifications' },
+  ];
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Welcome Back!</h1>
-        <p className="text-muted-foreground">Track your internship progress and achievements</p>
+        <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold tracking-tight`}>Welcome Back!</h1>
+        <p className="text-sm text-muted-foreground">Track your internship progress and achievements</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Overall Progress</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Week {stats.currentWeek} of {stats.totalWeeks}</span>
-            <span className="font-medium">{Math.round(progress)}%</span>
+      {/* Progress Summary Card */}
+      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+        <CardContent className="pt-6 space-y-3">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-sm text-muted-foreground">Overall Progress</p>
+              <p className="text-2xl font-bold">Week {stats.currentWeek}<span className="text-sm font-normal text-muted-foreground"> / {stats.totalWeeks}</span></p>
+            </div>
+            <div className="h-14 w-14 rounded-full border-4 border-primary flex items-center justify-center">
+              <span className="text-sm font-bold">{Math.round(progress)}%</span>
+            </div>
           </div>
-          <Progress value={progress} className="h-3" />
+          <Progress value={progress} className="h-2" />
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      {/* Quick Actions Grid */}
+      <div>
+        <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">Quick Actions</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {quickActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <Link key={action.href} to={action.href}>
+                <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+                  <CardContent className="p-4 flex flex-col gap-2">
+                    <div className={`h-10 w-10 rounded-xl ${action.bg} flex items-center justify-center`}>
+                      <Icon className={`h-5 w-5 ${action.color}`} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">{action.label}</p>
+                      <p className="text-xs text-muted-foreground">{action.desc}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Stats Row */}
+      <div className="grid grid-cols-3 gap-3">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Completed Tasks</CardTitle>
-            <FileText className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.completedTasks}</div>
+          <CardContent className="p-4 text-center">
+            <FileText className="h-4 w-4 mx-auto text-emerald-500 mb-1" />
+            <p className="text-xl font-bold">{stats.completedTasks}</p>
+            <p className="text-[10px] text-muted-foreground">Completed</p>
           </CardContent>
         </Card>
-
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Average Score</CardTitle>
-            <TrendingUp className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.avgScore}/10</div>
+          <CardContent className="p-4 text-center">
+            <TrendingUp className="h-4 w-4 mx-auto text-blue-500 mb-1" />
+            <p className="text-xl font-bold">{stats.avgScore}</p>
+            <p className="text-[10px] text-muted-foreground">Avg Score</p>
           </CardContent>
         </Card>
-
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Upcoming Meetings</CardTitle>
-            <Calendar className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.upcomingMeetings}</div>
+          <CardContent className="p-4 text-center">
+            <Calendar className="h-4 w-4 mx-auto text-purple-500 mb-1" />
+            <p className="text-xl font-bold">{stats.upcomingMeetings}</p>
+            <p className="text-[10px] text-muted-foreground">Meetings</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>This Week's Tasks</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">No tasks for this week</p>
-          </CardContent>
-        </Card>
+      {/* Activity Cards */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Link to="/my-progress">
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">This Week's Tasks</CardTitle>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">View your current week assignments and submit deliverables</p>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Feedback</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">No recent feedback</p>
-          </CardContent>
-        </Card>
+        <Link to="/messages">
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">Recent Messages</CardTitle>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">Chat with your mentor and stay updated on feedback</p>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
     </div>
   );
