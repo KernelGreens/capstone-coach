@@ -19,6 +19,18 @@ interface SortableProjectCardProps {
 
 export function SortableProjectCard({ project, onEdit, onDelete, onView, isDraggable = false }: SortableProjectCardProps) {
   const [lessonsOpen, setLessonsOpen] = useState(false);
+  const [lessonCount, setLessonCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      const { count } = await supabase
+        .from('lessons')
+        .select('*', { count: 'exact', head: true })
+        .eq('project_id', project.id);
+      setLessonCount(count ?? 0);
+    };
+    fetchCount();
+  }, [project.id, lessonsOpen]);
   const {
     attributes,
     listeners,
