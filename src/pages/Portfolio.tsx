@@ -157,6 +157,11 @@ export default function Portfolio() {
     window.print();
   };
 
+  // Redirect non-authenticated users without a share token
+  if (!authLoading && !user && !shareToken) {
+    return <Navigate to="/auth" replace />;
+  }
+
   if (loading) {
     return shareToken ? (
       <div className="min-h-screen bg-background p-8">
