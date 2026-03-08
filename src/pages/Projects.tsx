@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, BookOpen, Edit, Trash2, Search, Eye, Printer, Download } from 'lucide-react';
+import { Plus, BookOpen, Edit, Trash2, Search, Eye, Printer, Download, FileDown } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -254,10 +254,6 @@ export default function Projects() {
             <p className="text-muted-foreground">Define projects and assignments for each track</p>
           </div>
            <div className="flex gap-2">
-            <Button variant="outline" onClick={() => window.print()}>
-              <Printer className="mr-2 h-4 w-4" />
-              Print
-            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
@@ -266,6 +262,14 @@ export default function Projects() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => window.print()}>
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => window.print()}>
+                  <FileDown className="mr-2 h-4 w-4" />
+                  Download as PDF
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={downloadCSV}>Download as CSV</DropdownMenuItem>
                 <DropdownMenuItem onClick={downloadJSON}>Download as JSON</DropdownMenuItem>
               </DropdownMenuContent>
