@@ -103,6 +103,17 @@ export function CurriculumCard({ project, trackId, weekNumber, canEditResources 
           </div>
         )}
 
+        {/* Lessons Section */}
+        {project?.id && (
+          <div className="border-t pt-4 mt-4">
+            <LessonList
+              projectId={project.id}
+              projectTitle={project.title}
+              isSuperviorView={canEditResources}
+            />
+          </div>
+        )}
+
         {trackId && weekNumber && (
           <div className="border-t pt-4 mt-4">
             <WeeklyResourcesSection 
