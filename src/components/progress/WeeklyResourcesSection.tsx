@@ -10,7 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { BookOpen, Link as LinkIcon, Video, FileText, Plus, ExternalLink, Trash2 } from 'lucide-react';
+import { BookOpen, Plus, ExternalLink, Trash2, Play } from 'lucide-react';
+import { getContentTypeConfig } from '@/components/resources/contentTypes';
+import { ContentTypeSelect } from '@/components/resources/ContentTypeSelect';
+import { ContentViewer } from '@/components/resources/ContentViewer';
 
 interface WeeklyResourcesSectionProps {
   trackId: string;
@@ -22,6 +25,7 @@ export function WeeklyResourcesSection({ trackId, weekNumber, canEdit = false }:
   const [resources, setResources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [viewerResource, setViewerResource] = useState<any>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -54,14 +58,9 @@ export function WeeklyResourcesSection({ trackId, weekNumber, canEdit = false }:
 
   const handleAddResource = async () => {
     if (!formData.title || !formData.url) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Title and URL are required',
-      });
+      toast({ variant: 'destructive', title: 'Error', description: 'Title and URL are required' });
       return;
     }
-
     const { error } = await supabase.from('weekly_resources').insert({
       track_id: trackId,
       week_number: weekNumber,
@@ -71,18 +70,10 @@ export function WeeklyResourcesSection({ trackId, weekNumber, canEdit = false }:
       resource_type: formData.resource_type,
       created_by: user?.id,
     });
-
     if (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: error.message,
-      });
+      toast({ variant: 'destructive', title: 'Error', description: error.message });
     } else {
-      toast({
-        title: 'Success',
-        description: 'Resource added successfully',
-      });
+      toast({ title: 'Success', description: 'Resource added successfully' });
       setDialogOpen(false);
       setFormData({ title: '', description: '', url: '', resource_type: 'link' });
       fetchResources();
@@ -91,42 +82,18 @@ export function WeeklyResourcesSection({ trackId, weekNumber, canEdit = false }:
 
   const handleDeleteResource = async (id: string) => {
     const { error } = await supabase.from('weekly_resources').delete().eq('id', id);
-
     if (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: error.message,
-      });
+      toast({ variant: 'destructive', title: 'Error', description: error.message });
     } else {
-      toast({
-        title: 'Success',
-        description: 'Resource deleted',
-      });
+      toast({ title: 'Success', description: 'Resource deleted' });
       fetchResources();
     }
   };
 
-  const getResourceIcon = (type: string) => {
-    switch (type) {
-      case 'video':
-        return Video;
-      case 'document':
-        return FileText;
-      case 'tutorial':
-        return BookOpen;
-      default:
-        return LinkIcon;
-    }
-  };
+  const isEmbeddable = (type: string) => ['video', 'notebook', 'slide_deck', 'code_example'].includes(type);
 
-  if (loading) {
-    return null;
-  }
-
-  if (resources.length === 0 && !canEdit) {
-    return null;
-  }
+  if (loading) return null;
+  if (resources.length === 0 && !canEdit) return null;
 
   return (
     <div className="space-y-3">
@@ -158,28 +125,21 @@ export function WeeklyResourcesSection({ trackId, weekNumber, canEdit = false }:
                 </div>
                 <div>
                   <Label>Type</Label>
-                  <Select
+                  <ContentTypeSelect
                     value={formData.resource_type}
                     onValueChange={(v) => setFormData({ ...formData, resource_type: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="link">Link</SelectItem>
-                      <SelectItem value="video">Video</SelectItem>
-                      <SelectItem value="document">Document</SelectItem>
-                      <SelectItem value="tutorial">Tutorial</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  />
                 </div>
                 <div>
                   <Label>URL *</Label>
                   <Input
                     value={formData.url}
                     onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                    placeholder="https://..."
+                    placeholder={getContentTypeConfig(formData.resource_type).placeholder}
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {getContentTypeConfig(formData.resource_type).description}
+                  </p>
                 </div>
                 <div>
                   <Label>Description</Label>
@@ -204,7 +164,8 @@ export function WeeklyResourcesSection({ trackId, weekNumber, canEdit = false }:
       ) : (
         <div className="space-y-2">
           {resources.map((resource) => {
-            const Icon = getResourceIcon(resource.resource_type);
+            const config = getContentTypeConfig(resource.resource_type);
+            const Icon = config.icon;
             return (
               <div
                 key={resource.id}
@@ -221,8 +182,18 @@ export function WeeklyResourcesSection({ trackId, weekNumber, canEdit = false }:
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
                   <Badge variant="outline" className="text-xs">
-                    {resource.resource_type}
+                    {config.label}
                   </Badge>
+                  {resource.url && isEmbeddable(resource.resource_type) && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7"
+                      onClick={() => setViewerResource(resource)}
+                    >
+                      <Play className="h-3 w-3" />
+                    </Button>
+                  )}
                   <Button
                     size="icon"
                     variant="ghost"
@@ -247,6 +218,12 @@ export function WeeklyResourcesSection({ trackId, weekNumber, canEdit = false }:
           })}
         </div>
       )}
+
+      <ContentViewer
+        open={!!viewerResource}
+        onOpenChange={(open) => !open && setViewerResource(null)}
+        resource={viewerResource || { title: '', resource_type: 'link' }}
+      />
     </div>
   );
 }
