@@ -50,10 +50,6 @@ export function CurriculumCard({ project, trackId, weekNumber, canEditResources 
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {project.description && (
-          <p className="text-sm text-muted-foreground">{project.description}</p>
-        )}
-
         {project.objectives && (
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm font-medium">
@@ -62,6 +58,18 @@ export function CurriculumCard({ project, trackId, weekNumber, canEditResources 
             </div>
             <div className="pl-6 text-sm text-muted-foreground whitespace-pre-line">
               {project.objectives}
+            </div>
+          </div>
+        )}
+
+        {project.description && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <BookOpen className="h-4 w-4 text-primary" />
+              Tasks
+            </div>
+            <div className="pl-6 text-sm text-muted-foreground whitespace-pre-line">
+              {project.description}
             </div>
           </div>
         )}
