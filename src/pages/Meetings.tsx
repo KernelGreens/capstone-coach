@@ -220,6 +220,49 @@ export default function Meetings() {
     setMeetingToDelete(null);
   };
 
+  const handleGenerateSlides = async (meeting: Meeting) => {
+    setGeneratingSlides(meeting.id);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-meeting-slides`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            meetingTitle: meeting.title,
+            meetingDescription: meeting.description || '',
+            studentName: meeting.student_profile?.full_name || 'Student',
+            scheduledAt: format(new Date(meeting.scheduled_at), 'PPP p'),
+          }),
+        }
+      );
+
+      if (response.status === 429) {
+        toast({ variant: 'destructive', title: 'Rate limited', description: 'Please try again in a moment.' });
+        return;
+      }
+      if (response.status === 402) {
+        toast({ variant: 'destructive', title: 'Credits exhausted', description: 'Please add AI credits in your workspace settings.' });
+        return;
+      }
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to generate slides');
+
+      await generatePptx(data.slides, meeting.title);
+
+      toast({ title: 'Slides generated!', description: 'Your PowerPoint presentation has been downloaded.' });
+    } catch (error: any) {
+      console.error('Error generating slides:', error);
+      toast({ variant: 'destructive', title: 'Generation failed', description: error.message });
+    } finally {
+      setGeneratingSlides(null);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'scheduled':
