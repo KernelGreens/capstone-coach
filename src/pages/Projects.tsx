@@ -514,7 +514,7 @@ export default function Projects() {
                 </Card>
               ) : (
                 capstoneProjects.map((project) => (
-                  <ProjectCard
+                  <SortableProjectCard
                     key={project.id}
                     project={project}
                     onEdit={handleEdit}
