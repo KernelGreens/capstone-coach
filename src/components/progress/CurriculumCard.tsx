@@ -124,6 +124,16 @@ export function CurriculumCard({ project, trackId, weekNumber, canEditResources 
             />
           </div>
         )}
+
+        {/* AI Resource Suggestions */}
+        {weekNumber && (
+          <div className="border-t pt-4 mt-4">
+            <SuggestResourcesButton
+              project={project}
+              weekNumber={weekNumber}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
