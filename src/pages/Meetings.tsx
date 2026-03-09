@@ -5,7 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/hooks/use-subscription';
 import { MeetingDialog } from '@/components/meetings/MeetingDialog';
+import { VideoCallDialog } from '@/components/meetings/VideoCallDialog';
 import {
   Loader2,
   Plus,
