@@ -28,6 +28,7 @@ import CapstoneProject from "./pages/CapstoneProject";
 import Marketplace from "./pages/Marketplace";
 import Pricing from "./pages/Pricing";
 import AIAssistant from "./pages/AIAssistant";
+import Quizzes from "./pages/Quizzes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
