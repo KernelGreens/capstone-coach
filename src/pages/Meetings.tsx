@@ -69,7 +69,10 @@ export default function Meetings() {
   const [meetingToDelete, setMeetingToDelete] = useState<Meeting | null>(null);
   const [saving, setSaving] = useState(false);
   const [generatingSlides, setGeneratingSlides] = useState<string | null>(null);
+  const [videoCallMeeting, setVideoCallMeeting] = useState<Meeting | null>(null);
   const { toast } = useToast();
+  const { subscribed, isExcluded } = useSubscription();
+  const canUseVideo = subscribed || isExcluded;
 
   useEffect(() => {
     fetchMeetings();
