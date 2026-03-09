@@ -23,7 +23,8 @@ import {
   Trophy,
   Store,
   Crown,
-  Sparkles
+  Sparkles,
+  Brain
 } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
 import { cn } from '@/lib/utils';
