@@ -41,11 +41,11 @@ const Index = () => {
       <main className="flex-1">
         <section className="container mx-auto px-4 py-20 text-center">
           <h1 className="mb-6 text-5xl font-bold tracking-tight">
-            Transform Your Internship Experience
+            Mentor, Track & Grow — Together
           </h1>
           <p className="mx-auto mb-8 max-w-2xl text-xl text-muted-foreground">
-            A comprehensive platform for mentors and students to track progress, manage evaluations,
-            and achieve professional growth throughout the internship journey.
+            The all-in-one platform where supervisors guide and students thrive.
+            Manage tracks, monitor progress, and collaborate throughout every internship journey.
           </p>
           <Link to="/auth">
             <Button size="lg" className="text-lg">
