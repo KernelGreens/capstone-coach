@@ -1,8 +1,29 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { GraduationCap, Target, TrendingUp, Users } from 'lucide-react';
 
 const Index = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is already authenticated (e.g. after OAuth redirect)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        navigate('/dashboard', { replace: true });
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        navigate('/dashboard', { replace: true });
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
   return (
     <div className="flex min-h-screen flex-col">
       <header className="border-b">
