@@ -358,6 +358,80 @@ export type Database = {
           },
         ]
       }
+      coupon_redemptions: {
+        Row: {
+          access_expires_at: string
+          coupon_id: string
+          id: string
+          plan_tier: string
+          redeemed_at: string
+          user_id: string
+        }
+        Insert: {
+          access_expires_at: string
+          coupon_id: string
+          id?: string
+          plan_tier: string
+          redeemed_at?: string
+          user_id: string
+        }
+        Update: {
+          access_expires_at?: string
+          coupon_id?: string
+          id?: string
+          plan_tier?: string
+          redeemed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_redemptions_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string
+          duration_days: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          plan_tier: string
+          times_used: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by: string
+          duration_days?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          plan_tier?: string
+          times_used?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string
+          duration_days?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          plan_tier?: string
+          times_used?: number
+        }
+        Relationships: []
+      }
       deliverables: {
         Row: {
           description: string | null
