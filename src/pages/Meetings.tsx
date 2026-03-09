@@ -472,6 +472,16 @@ export default function Meetings() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {videoCallMeeting && (
+          <VideoCallDialog
+            open={!!videoCallMeeting}
+            onOpenChange={(open) => { if (!open) setVideoCallMeeting(null); }}
+            roomName={`capstone-meeting-${videoCallMeeting.id}`}
+            meetingTitle={videoCallMeeting.title}
+            userDisplayName={user?.email?.split('@')[0] || 'User'}
+          />
+        )}
       </div>
     </DashboardLayout>
   );
