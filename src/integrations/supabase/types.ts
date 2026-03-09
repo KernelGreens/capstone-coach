@@ -1132,6 +1132,164 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_attempts: {
+        Row: {
+          answers: Json | null
+          completed_at: string | null
+          id: string
+          max_score: number | null
+          quiz_id: string
+          score: number | null
+          started_at: string
+          student_id: string
+          weekly_progress_id: string | null
+        }
+        Insert: {
+          answers?: Json | null
+          completed_at?: string | null
+          id?: string
+          max_score?: number | null
+          quiz_id: string
+          score?: number | null
+          started_at?: string
+          student_id: string
+          weekly_progress_id?: string | null
+        }
+        Update: {
+          answers?: Json | null
+          completed_at?: string | null
+          id?: string
+          max_score?: number | null
+          quiz_id?: string
+          score?: number | null
+          started_at?: string
+          student_id?: string
+          weekly_progress_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_attempts_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_attempts_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_attempts_weekly_progress_id_fkey"
+            columns: ["weekly_progress_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_progress"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_questions: {
+        Row: {
+          correct_answer: string
+          created_at: string
+          display_order: number
+          explanation: string | null
+          id: string
+          options: Json | null
+          points: number
+          question_text: string
+          question_type: string
+          quiz_id: string
+        }
+        Insert: {
+          correct_answer: string
+          created_at?: string
+          display_order?: number
+          explanation?: string | null
+          id?: string
+          options?: Json | null
+          points?: number
+          question_text: string
+          question_type?: string
+          quiz_id: string
+        }
+        Update: {
+          correct_answer?: string
+          created_at?: string
+          display_order?: number
+          explanation?: string | null
+          id?: string
+          options?: Json | null
+          points?: number
+          question_text?: string
+          question_type?: string
+          quiz_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_questions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quizzes: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_ai_generated: boolean
+          is_published: boolean
+          quiz_type: string
+          time_limit_minutes: number | null
+          title: string
+          track_id: string | null
+          updated_at: string
+          week_number: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_ai_generated?: boolean
+          is_published?: boolean
+          quiz_type?: string
+          time_limit_minutes?: number | null
+          title: string
+          track_id?: string | null
+          updated_at?: string
+          week_number?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_ai_generated?: boolean
+          is_published?: boolean
+          quiz_type?: string
+          time_limit_minutes?: number | null
+          title?: string
+          track_id?: string | null
+          updated_at?: string
+          week_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quizzes_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       resources: {
         Row: {
           created_at: string
