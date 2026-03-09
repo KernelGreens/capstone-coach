@@ -66,6 +66,7 @@ const App = () => (
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/ai-assistant" element={<ProtectedRoute><AIAssistant /></ProtectedRoute>} />
             <Route path="/quizzes" element={<ProtectedRoute><Quizzes /></ProtectedRoute>} />
+            <Route path="/coupons" element={<ProtectedRoute allowedRoles={['supervisor']}><CouponManager /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
