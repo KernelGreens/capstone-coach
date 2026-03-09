@@ -58,6 +58,78 @@ export default function Pricing() {
     }
   };
 
+  const handleRedeemCoupon = async () => {
+    if (!user) { navigate('/auth'); return; }
+    if (!couponCode.trim()) { toast({ title: 'Enter a coupon code', variant: 'destructive' }); return; }
+    setCouponLoading(true);
+    try {
+      // Find the coupon
+      const { data: coupon, error: findError } = await supabase
+        .from('coupons')
+        .select('*')
+        .eq('code', couponCode.toUpperCase().trim())
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (findError || !coupon) {
+        toast({ title: 'Invalid coupon', description: 'This coupon code is not valid.', variant: 'destructive' });
+        setCouponLoading(false);
+        return;
+      }
+
+      // Check expiry
+      if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) {
+        toast({ title: 'Expired', description: 'This coupon has expired.', variant: 'destructive' });
+        setCouponLoading(false);
+        return;
+      }
+
+      // Check max uses
+      if (coupon.max_uses && coupon.times_used >= coupon.max_uses) {
+        toast({ title: 'Limit reached', description: 'This coupon has reached its usage limit.', variant: 'destructive' });
+        setCouponLoading(false);
+        return;
+      }
+
+      // Check if user already redeemed this coupon
+      const { data: existing } = await supabase
+        .from('coupon_redemptions')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('coupon_id', coupon.id)
+        .maybeSingle();
+
+      if (existing) {
+        toast({ title: 'Already redeemed', description: 'You have already used this coupon.', variant: 'destructive' });
+        setCouponLoading(false);
+        return;
+      }
+
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + coupon.duration_days);
+
+      const { error: redeemError } = await supabase.from('coupon_redemptions').insert({
+        coupon_id: coupon.id,
+        user_id: user.id,
+        plan_tier: coupon.plan_tier,
+        access_expires_at: expiresAt.toISOString(),
+      });
+
+      if (redeemError) throw redeemError;
+
+      // Increment times_used
+      await supabase.from('coupons').update({ times_used: coupon.times_used + 1 }).eq('id', coupon.id);
+
+      toast({ title: '🎉 Coupon applied!', description: `You now have ${coupon.plan_tier} access for ${coupon.duration_days} days.` });
+      setCouponCode('');
+      checkSubscription();
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message || 'Failed to redeem coupon', variant: 'destructive' });
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
   const freeFeatures = [
     '1 active student',
     'Weekly progress tracking',
