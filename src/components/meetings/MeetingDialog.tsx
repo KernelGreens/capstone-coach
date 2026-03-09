@@ -17,7 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2 } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Student {
   id: string;
@@ -57,7 +59,7 @@ export function MeetingDialog({
 }: MeetingDialogProps) {
   const [formData, setFormData] = useState({
     title: '',
-    student_id: '',
+    student_ids: [] as string[],
     scheduled_at: '',
     duration_minutes: '60',
     location: '',
@@ -70,7 +72,7 @@ export function MeetingDialog({
     if (meeting) {
       setFormData({
         title: meeting.title || '',
-        student_id: meeting.student_id || '',
+        student_ids: [meeting.student_id],
         scheduled_at: meeting.scheduled_at ? new Date(meeting.scheduled_at).toISOString().slice(0, 16) : '',
         duration_minutes: meeting.duration_minutes?.toString() || '60',
         location: meeting.location || '',
@@ -81,7 +83,7 @@ export function MeetingDialog({
     } else {
       setFormData({
         title: '',
-        student_id: '',
+        student_ids: [],
         scheduled_at: '',
         duration_minutes: '60',
         location: '',
@@ -92,24 +94,47 @@ export function MeetingDialog({
     }
   }, [meeting, open]);
 
+  const toggleStudent = (studentId: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      student_ids: prev.student_ids.includes(studentId)
+        ? prev.student_ids.filter((id) => id !== studentId)
+        : [...prev.student_ids, studentId],
+    }));
+  };
+
+  const selectAllStudents = () => {
+    setFormData((prev) => ({
+      ...prev,
+      student_ids: prev.student_ids.length === students.length ? [] : students.map((s) => s.id),
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.student_ids.length === 0) return;
+
     await onSave({
-      ...formData,
+      title: formData.title,
+      student_ids: formData.student_ids,
+      scheduled_at: formData.scheduled_at,
       duration_minutes: parseInt(formData.duration_minutes),
       location: formData.location || null,
       meeting_link: formData.meeting_link || null,
       description: formData.description || null,
+      status: formData.status,
     });
   };
 
+  const isEditing = !!meeting;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{meeting ? 'Edit Meeting' : 'Schedule Meeting'}</DialogTitle>
+          <DialogTitle>{isEditing ? 'Edit Meeting' : 'Schedule Meeting'}</DialogTitle>
           <DialogDescription>
-            {meeting ? 'Update meeting details' : 'Schedule a new meeting with a student'}
+            {isEditing ? 'Update meeting details' : 'Schedule a new meeting with one or more students'}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
@@ -125,23 +150,57 @@ export function MeetingDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="student">Student *</Label>
-            <Select
-              value={formData.student_id}
-              onValueChange={(value) => setFormData((prev) => ({ ...prev, student_id: value }))}
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a student" />
-              </SelectTrigger>
-              <SelectContent>
-                {students.map((student) => (
-                  <SelectItem key={student.id} value={student.id}>
-                    {student.profiles?.full_name || 'Unnamed Student'}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center justify-between">
+              <Label>{isEditing ? 'Student' : 'Students *'}</Label>
+              {!isEditing && students.length > 1 && (
+                <Button type="button" variant="ghost" size="sm" onClick={selectAllStudents}>
+                  {formData.student_ids.length === students.length ? 'Deselect All' : 'Select All'}
+                </Button>
+              )}
+            </div>
+            {isEditing ? (
+              <Select
+                value={formData.student_ids[0] || ''}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, student_ids: [value] }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a student" />
+                </SelectTrigger>
+                <SelectContent>
+                  {students.map((student) => (
+                    <SelectItem key={student.id} value={student.id}>
+                      {student.profiles?.full_name || 'Unnamed Student'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <ScrollArea className="max-h-40 rounded-md border p-3">
+                {students.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No active students found</p>
+                ) : (
+                  <div className="space-y-2">
+                    {students.map((student) => (
+                      <label
+                        key={student.id}
+                        className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded p-1 -m-1"
+                      >
+                        <Checkbox
+                          checked={formData.student_ids.includes(student.id)}
+                          onCheckedChange={() => toggleStudent(student.id)}
+                        />
+                        <span className="text-sm">{student.profiles?.full_name || 'Unnamed Student'}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            )}
+            {!isEditing && formData.student_ids.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {formData.student_ids.length} student{formData.student_ids.length > 1 ? 's' : ''} selected
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -176,7 +235,7 @@ export function MeetingDialog({
             </div>
           </div>
 
-          {meeting && (
+          {isEditing && (
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select
@@ -227,16 +286,20 @@ export function MeetingDialog({
           </div>
 
           <div className="flex gap-2 pt-4">
-            <Button type="submit" className="flex-1" disabled={saving}>
+            <Button
+              type="submit"
+              className="flex-1"
+              disabled={saving || formData.student_ids.length === 0}
+            >
               {saving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Saving...
                 </>
-              ) : meeting ? (
+              ) : isEditing ? (
                 'Update Meeting'
               ) : (
-                'Schedule Meeting'
+                `Schedule Meeting${formData.student_ids.length > 1 ? ` (${formData.student_ids.length} students)` : ''}`
               )}
             </Button>
             <Button

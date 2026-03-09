@@ -96,7 +96,6 @@ export default function Meetings() {
         variant: 'destructive',
       });
     } else if (data) {
-      // Fetch student profiles
       const studentIds = [...new Set(data.map((m) => m.student_id))];
       const { data: studentsData } = await supabase
         .from('students')
@@ -143,35 +142,37 @@ export default function Meetings() {
     setSaving(true);
 
     try {
-      if (editingMeeting) {
-        // Update existing meeting
+      if (formData.status && formData.student_ids?.length === 1 && editingMeeting) {
+        // Editing existing meeting
+        const { student_ids, ...rest } = formData;
         const { error } = await supabase
           .from('meetings')
           .update({
-            ...formData,
+            ...rest,
+            student_id: student_ids[0],
             scheduled_at: new Date(formData.scheduled_at).toISOString(),
           })
           .eq('id', editingMeeting.id);
 
         if (error) throw error;
 
-        toast({
-          title: 'Success',
-          description: 'Meeting updated successfully',
-        });
+        toast({ title: 'Success', description: 'Meeting updated successfully' });
       } else {
-        // Create new meeting
-        const { error } = await supabase.from('meetings').insert({
-          ...formData,
+        // Create meeting(s) for each selected student
+        const { student_ids, ...rest } = formData;
+        const meetingsToInsert = student_ids.map((studentId: string) => ({
+          ...rest,
+          student_id: studentId,
           supervisor_id: user.id,
           scheduled_at: new Date(formData.scheduled_at).toISOString(),
-        });
+        }));
 
+        const { error } = await supabase.from('meetings').insert(meetingsToInsert);
         if (error) throw error;
 
         toast({
           title: 'Success',
-          description: 'Meeting scheduled successfully',
+          description: `Meeting scheduled for ${student_ids.length} student${student_ids.length > 1 ? 's' : ''}`,
         });
       }
 
@@ -208,21 +209,55 @@ export default function Meetings() {
       .eq('id', meetingToDelete.id);
 
     if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete meeting',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Failed to delete meeting', variant: 'destructive' });
     } else {
-      toast({
-        title: 'Success',
-        description: 'Meeting deleted successfully',
-      });
+      toast({ title: 'Success', description: 'Meeting deleted successfully' });
       fetchMeetings();
     }
 
     setDeleteDialogOpen(false);
     setMeetingToDelete(null);
+  };
+
+  const handleStartVideoCall = async (meeting: Meeting) => {
+    setVideoCallMeeting(meeting);
+
+    // Notify the student about the video call
+    try {
+      // Get student's user_id
+      const { data: studentData } = await supabase
+        .from('students')
+        .select('user_id')
+        .eq('id', meeting.student_id)
+        .single();
+
+      if (studentData) {
+        // Create in-app notification
+        await supabase.from('notifications').insert({
+          user_id: studentData.user_id,
+          title: '📹 Video Call Started',
+          message: `Your supervisor has started a video call: "${meeting.title}". Join now from your Meetings page.`,
+          type: 'video_call',
+          related_id: meeting.id,
+        });
+
+        // Try sending push notification
+        try {
+          await supabase.functions.invoke('send-push-notification', {
+            body: {
+              user_id: studentData.user_id,
+              title: '📹 Video Call Started',
+              message: `Join the video call: "${meeting.title}"`,
+              url: '/meetings',
+            },
+          });
+        } catch {
+          // Push notification is best-effort
+        }
+      }
+    } catch {
+      // Notification sending is best-effort, don't block the call
+    }
   };
 
   const handleGenerateSlides = async (meeting: Meeting) => {
@@ -375,61 +410,67 @@ export default function Meetings() {
                       </a>
                     </div>
                   )}
-                    {meeting.description && (
+                  {meeting.description && (
                     <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap">
                       {meeting.description}
                     </p>
                   )}
                   <div className="flex flex-col gap-2 pt-3 border-t">
-                    {canUseVideo && meeting.status === 'scheduled' && (
+                    {meeting.status === 'scheduled' && (
                       <Button
                         size="sm"
                         className="w-full"
-                        onClick={() => setVideoCallMeeting(meeting)}
+                        onClick={() =>
+                          userRole === 'supervisor'
+                            ? handleStartVideoCall(meeting)
+                            : setVideoCallMeeting(meeting)
+                        }
                       >
                         <Video className="mr-2 h-4 w-4" />
-                        Join Video Call
+                        {userRole === 'supervisor' ? 'Start Video Call' : 'Join Video Call'}
                       </Button>
                     )}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => handleGenerateSlides(meeting)}
-                      disabled={generatingSlides === meeting.id}
-                    >
-                      {generatingSlides === meeting.id ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Generating Slides...
-                        </>
-                      ) : (
-                        <>
-                          <Presentation className="mr-2 h-4 w-4" />
-                          Generate Slides
-                        </>
-                      )}
-                    </Button>
                     {userRole === 'supervisor' && (
-                      <div className="flex gap-2">
+                      <>
                         <Button
                           size="sm"
                           variant="outline"
-                          className="flex-1"
-                          onClick={() => handleEdit(meeting)}
+                          className="w-full"
+                          onClick={() => handleGenerateSlides(meeting)}
+                          disabled={generatingSlides === meeting.id}
                         >
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Edit
+                          {generatingSlides === meeting.id ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Generating Slides...
+                            </>
+                          ) : (
+                            <>
+                              <Presentation className="mr-2 h-4 w-4" />
+                              Generate Slides
+                            </>
+                          )}
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => handleDeleteClick(meeting)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => handleEdit(meeting)}
+                          >
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteClick(meeting)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </>
                     )}
                   </div>
                 </CardContent>
