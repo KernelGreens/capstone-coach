@@ -179,10 +179,8 @@ serve(async (req) => {
       .eq('id', track_id)
       .single();
 
-    // Get app URL from environment or construct it
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-    const projectRef = supabaseUrl.match(/https:\/\/([^.]+)/)?.[1] || '';
-    const appUrl = `https://${projectRef}.lovable.app`;
+    // Get app URL
+    const appUrl = Deno.env.get('APP_URL') || 'https://capstone-coach.lovable.app';
 
     // Send invitation email
     const emailHtml = `
