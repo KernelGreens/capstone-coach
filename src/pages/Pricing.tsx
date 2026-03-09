@@ -29,10 +29,13 @@ export const PRODUCT_IDS = {
 
 export default function Pricing() {
   const { user, userRole } = useAuth();
-  const { subscribed, isExcluded, loading, productId, createCheckout, openCustomerPortal } = useSubscription();
+  const { subscribed, isExcluded, loading, productId, createCheckout, openCustomerPortal, checkSubscription } = useSubscription();
   const [annual, setAnnual] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const isPro = subscribed && (productId === PRODUCT_IDS.pro_monthly || productId === PRODUCT_IDS.pro_annual);
   const isPremium = subscribed && (productId === PRODUCT_IDS.premium_monthly || productId === PRODUCT_IDS.premium_annual);
