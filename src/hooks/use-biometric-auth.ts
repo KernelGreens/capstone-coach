@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -28,11 +28,23 @@ export function useBiometricAuth() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [isSupported, setIsSupported] = useState(() => {
-    return typeof window !== 'undefined' &&
-      !!window.PublicKeyCredential &&
-      typeof navigator.credentials !== 'undefined';
-  });
+  const [isSupported, setIsSupported] = useState(false);
+
+  useEffect(() => {
+    const check = async () => {
+      try {
+        if (typeof window === 'undefined' || !window.PublicKeyCredential || !navigator.credentials) {
+          setIsSupported(false);
+          return;
+        }
+        const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+        setIsSupported(available);
+      } catch {
+        setIsSupported(false);
+      }
+    };
+    check();
+  }, []);
 
   const checkPlatformAuthenticator = useCallback(async (): Promise<boolean> => {
     if (!window.PublicKeyCredential) return false;
