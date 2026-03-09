@@ -337,6 +337,28 @@ export default function Pricing() {
           </CardFooter>
         </Card>
       </div>
+
+      {/* Coupon Redemption */}
+      <Card className="max-w-md mx-auto">
+        <CardHeader className="text-center">
+          <CardTitle className="flex items-center justify-center gap-2 text-lg">
+            <Ticket className="h-5 w-5" /> Have a Coupon Code?
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Enter coupon code"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+              className="font-mono"
+            />
+            <Button onClick={handleRedeemCoupon} disabled={couponLoading}>
+              {couponLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Apply'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 
