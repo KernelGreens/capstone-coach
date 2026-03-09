@@ -70,9 +70,7 @@ serve(async (req) => {
       password: tempPassword,
     });
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-    const projectRef = supabaseUrl.match(/https:\/\/([^.]+)/)?.[1] || '';
-    const appUrl = `https://${projectRef}.lovable.app`;
+    const appUrl = Deno.env.get('APP_URL') || 'https://capstone-coach.lovable.app';
 
     const emailHtml = `
       <!DOCTYPE html>
