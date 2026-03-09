@@ -381,6 +381,16 @@ export default function Meetings() {
                     </p>
                   )}
                   <div className="flex flex-col gap-2 pt-3 border-t">
+                    {canUseVideo && meeting.status === 'scheduled' && (
+                      <Button
+                        size="sm"
+                        className="w-full"
+                        onClick={() => setVideoCallMeeting(meeting)}
+                      >
+                        <Video className="mr-2 h-4 w-4" />
+                        Join Video Call
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="outline"
