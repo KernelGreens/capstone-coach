@@ -58,6 +58,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { href: '/capstone', label: 'Capstone', icon: Trophy },
     { href: '/resources', label: 'Resources', icon: Library },
     { href: '/marketplace', label: 'Marketplace', icon: Store },
+    { href: '/quizzes', label: 'Quizzes', icon: Brain },
     { href: '/ai-assistant', label: 'AI Assistant', icon: Sparkles },
     { href: '/pricing', label: 'Pricing', icon: Crown },
     ...(isSuperAdmin
