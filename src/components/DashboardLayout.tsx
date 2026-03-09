@@ -76,6 +76,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { href: '/resources', label: 'Resources', icon: Library },
     { href: '/portfolio', label: 'Portfolio', icon: Briefcase },
     { href: '/marketplace', label: 'Marketplace', icon: Store },
+    { href: '/quizzes', label: 'Quizzes', icon: Brain },
     { href: '/ai-assistant', label: 'AI Assistant', icon: Sparkles },
     { href: '/submit-feedback', label: 'Feedback', icon: MessageSquareHeart },
   ];
