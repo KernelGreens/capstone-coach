@@ -23,7 +23,8 @@ import {
   Trophy,
   Store,
   Crown,
-  Sparkles
+  Sparkles,
+  Brain
 } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
 import { cn } from '@/lib/utils';
@@ -57,6 +58,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { href: '/capstone', label: 'Capstone', icon: Trophy },
     { href: '/resources', label: 'Resources', icon: Library },
     { href: '/marketplace', label: 'Marketplace', icon: Store },
+    { href: '/quizzes', label: 'Quizzes', icon: Brain },
     { href: '/ai-assistant', label: 'AI Assistant', icon: Sparkles },
     { href: '/pricing', label: 'Pricing', icon: Crown },
     ...(isSuperAdmin
@@ -74,6 +76,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { href: '/resources', label: 'Resources', icon: Library },
     { href: '/portfolio', label: 'Portfolio', icon: Briefcase },
     { href: '/marketplace', label: 'Marketplace', icon: Store },
+    { href: '/quizzes', label: 'Quizzes', icon: Brain },
     { href: '/ai-assistant', label: 'AI Assistant', icon: Sparkles },
     { href: '/submit-feedback', label: 'Feedback', icon: MessageSquareHeart },
   ];
