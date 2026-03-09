@@ -5,7 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/hooks/use-subscription';
 import { MeetingDialog } from '@/components/meetings/MeetingDialog';
+import { VideoCallDialog } from '@/components/meetings/VideoCallDialog';
 import {
   Loader2,
   Plus,
@@ -67,7 +69,10 @@ export default function Meetings() {
   const [meetingToDelete, setMeetingToDelete] = useState<Meeting | null>(null);
   const [saving, setSaving] = useState(false);
   const [generatingSlides, setGeneratingSlides] = useState<string | null>(null);
+  const [videoCallMeeting, setVideoCallMeeting] = useState<Meeting | null>(null);
   const { toast } = useToast();
+  const { subscribed, isExcluded } = useSubscription();
+  const canUseVideo = subscribed || isExcluded;
 
   useEffect(() => {
     fetchMeetings();
@@ -376,6 +381,16 @@ export default function Meetings() {
                     </p>
                   )}
                   <div className="flex flex-col gap-2 pt-3 border-t">
+                    {canUseVideo && meeting.status === 'scheduled' && (
+                      <Button
+                        size="sm"
+                        className="w-full"
+                        onClick={() => setVideoCallMeeting(meeting)}
+                      >
+                        <Video className="mr-2 h-4 w-4" />
+                        Join Video Call
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="outline"
@@ -457,6 +472,16 @@ export default function Meetings() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {videoCallMeeting && (
+          <VideoCallDialog
+            open={!!videoCallMeeting}
+            onOpenChange={(open) => { if (!open) setVideoCallMeeting(null); }}
+            roomName={`capstone-meeting-${videoCallMeeting.id}`}
+            meetingTitle={videoCallMeeting.title}
+            userDisplayName={user?.email?.split('@')[0] || 'User'}
+          />
+        )}
       </div>
     </DashboardLayout>
   );
