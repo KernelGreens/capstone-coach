@@ -52,6 +52,31 @@ serve(async (req) => {
       });
     }
 
+    // Check for active coupon redemption
+    const { data: couponAccess } = await supabaseClient
+      .from('coupon_redemptions')
+      .select('*')
+      .eq('user_id', user.id)
+      .gte('access_expires_at', new Date().toISOString())
+      .order('access_expires_at', { ascending: false })
+      .limit(1);
+
+    if (couponAccess && couponAccess.length > 0) {
+      const redemption = couponAccess[0];
+      const isPremiumCoupon = redemption.plan_tier === 'premium';
+      return new Response(JSON.stringify({
+        subscribed: true,
+        is_coupon: true,
+        max_students: isPremiumCoupon ? 999 : 10,
+        product_id: null,
+        plan_tier: redemption.plan_tier,
+        subscription_end: redemption.access_expires_at,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
     });

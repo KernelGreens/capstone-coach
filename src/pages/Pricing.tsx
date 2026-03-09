@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/use-subscription';
+import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Check, Crown, Loader2, Users, Zap, Gem } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { Check, Crown, Loader2, Users, Zap, Gem, Ticket } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const PRICES = {
@@ -26,10 +29,13 @@ export const PRODUCT_IDS = {
 
 export default function Pricing() {
   const { user, userRole } = useAuth();
-  const { subscribed, isExcluded, loading, productId, createCheckout, openCustomerPortal } = useSubscription();
+  const { subscribed, isExcluded, loading, productId, createCheckout, openCustomerPortal, checkSubscription } = useSubscription();
   const [annual, setAnnual] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const isPro = subscribed && (productId === PRODUCT_IDS.pro_monthly || productId === PRODUCT_IDS.pro_annual);
   const isPremium = subscribed && (productId === PRODUCT_IDS.premium_monthly || productId === PRODUCT_IDS.premium_annual);
@@ -49,6 +55,78 @@ export default function Pricing() {
       console.error('Checkout error:', error);
     } finally {
       setCheckoutLoading(null);
+    }
+  };
+
+  const handleRedeemCoupon = async () => {
+    if (!user) { navigate('/auth'); return; }
+    if (!couponCode.trim()) { toast({ title: 'Enter a coupon code', variant: 'destructive' }); return; }
+    setCouponLoading(true);
+    try {
+      // Find the coupon
+      const { data: coupon, error: findError } = await supabase
+        .from('coupons')
+        .select('*')
+        .eq('code', couponCode.toUpperCase().trim())
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (findError || !coupon) {
+        toast({ title: 'Invalid coupon', description: 'This coupon code is not valid.', variant: 'destructive' });
+        setCouponLoading(false);
+        return;
+      }
+
+      // Check expiry
+      if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) {
+        toast({ title: 'Expired', description: 'This coupon has expired.', variant: 'destructive' });
+        setCouponLoading(false);
+        return;
+      }
+
+      // Check max uses
+      if (coupon.max_uses && coupon.times_used >= coupon.max_uses) {
+        toast({ title: 'Limit reached', description: 'This coupon has reached its usage limit.', variant: 'destructive' });
+        setCouponLoading(false);
+        return;
+      }
+
+      // Check if user already redeemed this coupon
+      const { data: existing } = await supabase
+        .from('coupon_redemptions')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('coupon_id', coupon.id)
+        .maybeSingle();
+
+      if (existing) {
+        toast({ title: 'Already redeemed', description: 'You have already used this coupon.', variant: 'destructive' });
+        setCouponLoading(false);
+        return;
+      }
+
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + coupon.duration_days);
+
+      const { error: redeemError } = await supabase.from('coupon_redemptions').insert({
+        coupon_id: coupon.id,
+        user_id: user.id,
+        plan_tier: coupon.plan_tier,
+        access_expires_at: expiresAt.toISOString(),
+      });
+
+      if (redeemError) throw redeemError;
+
+      // Increment times_used
+      await supabase.from('coupons').update({ times_used: coupon.times_used + 1 }).eq('id', coupon.id);
+
+      toast({ title: '🎉 Coupon applied!', description: `You now have ${coupon.plan_tier} access for ${coupon.duration_days} days.` });
+      setCouponCode('');
+      checkSubscription();
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message || 'Failed to redeem coupon', variant: 'destructive' });
+    } finally {
+      setCouponLoading(false);
     }
   };
 
@@ -259,6 +337,28 @@ export default function Pricing() {
           </CardFooter>
         </Card>
       </div>
+
+      {/* Coupon Redemption */}
+      <Card className="max-w-md mx-auto">
+        <CardHeader className="text-center">
+          <CardTitle className="flex items-center justify-center gap-2 text-lg">
+            <Ticket className="h-5 w-5" /> Have a Coupon Code?
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Enter coupon code"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+              className="font-mono"
+            />
+            <Button onClick={handleRedeemCoupon} disabled={couponLoading}>
+              {couponLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Apply'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 

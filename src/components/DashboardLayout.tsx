@@ -62,7 +62,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { href: '/ai-assistant', label: 'AI Assistant', icon: Sparkles },
     { href: '/pricing', label: 'Pricing', icon: Crown },
     ...(isSuperAdmin
-      ? [{ href: '/feedback', label: 'User Feedback', icon: MessageSquareHeart }]
+      ? [
+          { href: '/coupons', label: 'Coupons', icon: Crown },
+          { href: '/feedback', label: 'User Feedback', icon: MessageSquareHeart },
+        ]
       : [{ href: '/submit-feedback', label: 'Feedback', icon: MessageSquareHeart }]),
   ];
 
