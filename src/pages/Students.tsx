@@ -162,6 +162,15 @@ export default function Students() {
 
     setSubmitting(true);
     try {
+      // Update profile name if changed
+      if (editStudent.full_name.trim() && selectedStudent.user_id) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ full_name: editStudent.full_name.trim() })
+          .eq('id', selectedStudent.user_id);
+        if (profileError) throw profileError;
+      }
+
       const { error } = await supabase
         .from('students')
         .update({
