@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 export function MobileBottomNav() {
   const { userRole } = useAuth();
   const location = useLocation();
+  const unreadCount = useUnreadMessageCount();
 
   const studentNav = [
     { href: '/dashboard', label: 'Home', icon: LayoutDashboard },
