@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { FileText, Upload, MessageSquare, CheckCircle2, Clock, AlertCircle, Sparkles, Loader2 } from 'lucide-react';
+import { FileText, Upload, MessageSquare, CheckCircle2, Clock, AlertCircle, Sparkles, Loader2, ClipboardList } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { DeliverablesSection } from './DeliverablesSection';
 import { validateFile, getAcceptString, formatFileSize, MAX_FILE_SIZE } from '@/lib/fileValidation';
+import { AssignmentList } from '@/components/assignments/AssignmentList';
 
 interface WeekProgressCardProps {
   weekProgress: any;
