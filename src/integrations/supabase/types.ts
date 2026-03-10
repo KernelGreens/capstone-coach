@@ -14,6 +14,140 @@ export type Database = {
   }
   public: {
     Tables: {
+      assignment_submissions: {
+        Row: {
+          assignment_id: string
+          content: string | null
+          created_at: string
+          feedback: string | null
+          file_name: string | null
+          file_path: string | null
+          graded_at: string | null
+          graded_by: string | null
+          id: string
+          score: number | null
+          status: string
+          student_id: string
+          submitted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          assignment_id: string
+          content?: string | null
+          created_at?: string
+          feedback?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          score?: number | null
+          status?: string
+          student_id: string
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assignment_id?: string
+          content?: string | null
+          created_at?: string
+          feedback?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          score?: number | null
+          status?: string
+          student_id?: string
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_submissions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_submissions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assignments: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          display_order: number
+          due_date: string | null
+          grading_criteria: string | null
+          id: string
+          instructions: string | null
+          is_step_guide: boolean
+          learning_objectives: string | null
+          max_score: number | null
+          resources: string | null
+          steps: Json | null
+          submission_requirements: string | null
+          title: string
+          updated_at: string
+          weekly_progress_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          display_order?: number
+          due_date?: string | null
+          grading_criteria?: string | null
+          id?: string
+          instructions?: string | null
+          is_step_guide?: boolean
+          learning_objectives?: string | null
+          max_score?: number | null
+          resources?: string | null
+          steps?: Json | null
+          submission_requirements?: string | null
+          title: string
+          updated_at?: string
+          weekly_progress_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          display_order?: number
+          due_date?: string | null
+          grading_criteria?: string | null
+          id?: string
+          instructions?: string | null
+          is_step_guide?: boolean
+          learning_objectives?: string | null
+          max_score?: number | null
+          resources?: string | null
+          steps?: Json | null
+          submission_requirements?: string | null
+          title?: string
+          updated_at?: string
+          weekly_progress_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignments_weekly_progress_id_fkey"
+            columns: ["weekly_progress_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_progress"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       capstone_milestones: {
         Row: {
           completed_at: string | null
