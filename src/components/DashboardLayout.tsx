@@ -2,6 +2,7 @@ import { ReactNode, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { 
   LayoutDashboard, 
   Users, 
@@ -26,6 +27,7 @@ import {
   Sparkles,
   Brain
 } from 'lucide-react';
+import { useUnreadMessageCount } from '@/hooks/use-unread-count';
 import { NotificationBell } from './NotificationBell';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
