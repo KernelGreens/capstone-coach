@@ -680,6 +680,15 @@ export default function Students() {
                 />
               )}
 
+              <div>
+                <Label>Full Name</Label>
+                <Input
+                  value={editStudent.full_name}
+                  onChange={(e) => setEditStudent({ ...editStudent, full_name: e.target.value })}
+                  placeholder="Student's full name"
+                />
+              </div>
+
               <div className="border-t pt-4">
                 <Label className="text-muted-foreground text-xs">Primary Track (for curriculum)</Label>
                 <Select value={editStudent.track_id} onValueChange={(value) => setEditStudent({ ...editStudent, track_id: value })}>
