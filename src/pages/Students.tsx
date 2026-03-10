@@ -41,6 +41,7 @@ export default function Students() {
   });
 
   const [editStudent, setEditStudent] = useState({
+    full_name: '',
     track_id: '',
     start_date: '',
     end_date: '',
@@ -161,6 +162,15 @@ export default function Students() {
 
     setSubmitting(true);
     try {
+      // Update profile name if changed
+      if (editStudent.full_name.trim() && selectedStudent.user_id) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ full_name: editStudent.full_name.trim() })
+          .eq('id', selectedStudent.user_id);
+        if (profileError) throw profileError;
+      }
+
       const { error } = await supabase
         .from('students')
         .update({
@@ -241,6 +251,7 @@ export default function Students() {
   const openEditDialog = (student: any) => {
     setSelectedStudent(student);
     setEditStudent({
+      full_name: student.profiles?.full_name || '',
       track_id: student.track_id || '',
       start_date: student.start_date,
       end_date: student.end_date,
@@ -668,6 +679,15 @@ export default function Students() {
                   onUpdate={fetchData}
                 />
               )}
+
+              <div>
+                <Label>Full Name</Label>
+                <Input
+                  value={editStudent.full_name}
+                  onChange={(e) => setEditStudent({ ...editStudent, full_name: e.target.value })}
+                  placeholder="Student's full name"
+                />
+              </div>
 
               <div className="border-t pt-4">
                 <Label className="text-muted-foreground text-xs">Primary Track (for curriculum)</Label>
