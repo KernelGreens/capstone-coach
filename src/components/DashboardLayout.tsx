@@ -45,11 +45,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isSuperAdmin = user?.email === 'abiodunahmadaws@gmail.com';
+  const unreadCount = useUnreadMessageCount();
 
   const supervisorLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/tracks', label: 'Tracks', icon: Target },
-    { href: '/projects', label: 'Projects', icon: BookOpen },
+    { href: '/projects', label: 'Curricula', icon: BookOpen },
     { href: '/evaluation-criteria', label: 'Criteria', icon: Target },
     { href: '/students', label: 'Students', icon: Users },
     { href: '/meetings', label: 'Meetings', icon: Calendar },
