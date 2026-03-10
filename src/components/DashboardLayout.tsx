@@ -110,6 +110,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             >
               <Icon className="h-5 w-5 shrink-0" />
               {link.label}
+              {link.href === '/messages' && unreadCount > 0 && (
+                <Badge variant="default" className="ml-auto h-5 min-w-5 flex items-center justify-center rounded-full text-[10px] px-1.5">
+                  {unreadCount}
+                </Badge>
+              )}
             </Link>
           );
         })}
