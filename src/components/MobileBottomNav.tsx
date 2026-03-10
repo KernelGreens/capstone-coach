@@ -2,6 +2,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { LayoutDashboard, FileText, MessageCircle, BookOpen, BarChart3, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUnreadMessageCount } from '@/hooks/use-unread-count';
+import { Badge } from '@/components/ui/badge';
 
 export function MobileBottomNav() {
   const { userRole } = useAuth();
