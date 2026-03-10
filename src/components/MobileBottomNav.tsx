@@ -2,10 +2,13 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { LayoutDashboard, FileText, MessageCircle, BookOpen, BarChart3, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUnreadMessageCount } from '@/hooks/use-unread-count';
+import { Badge } from '@/components/ui/badge';
 
 export function MobileBottomNav() {
   const { userRole } = useAuth();
   const location = useLocation();
+  const unreadCount = useUnreadMessageCount();
 
   const studentNav = [
     { href: '/dashboard', label: 'Home', icon: LayoutDashboard },
@@ -44,7 +47,14 @@ export function MobileBottomNav() {
                   : 'text-sidebar-foreground/60'
               )}
             >
-              <Icon className={cn('h-5 w-5', isActive && 'scale-110')} />
+              <div className="relative">
+                <Icon className={cn('h-5 w-5', isActive && 'scale-110')} />
+                {item.href === '/messages' && unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 h-4 min-w-4 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[9px] font-bold px-1">
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
               <span className="text-[10px] font-medium">{item.label}</span>
             </Link>
           );

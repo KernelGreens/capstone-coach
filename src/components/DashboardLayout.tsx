@@ -2,6 +2,7 @@ import { ReactNode, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { 
   LayoutDashboard, 
   Users, 
@@ -26,6 +27,7 @@ import {
   Sparkles,
   Brain
 } from 'lucide-react';
+import { useUnreadMessageCount } from '@/hooks/use-unread-count';
 import { NotificationBell } from './NotificationBell';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -43,11 +45,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isSuperAdmin = user?.email === 'abiodunahmadaws@gmail.com';
+  const unreadCount = useUnreadMessageCount();
 
   const supervisorLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/tracks', label: 'Tracks', icon: Target },
-    { href: '/projects', label: 'Projects', icon: BookOpen },
+    { href: '/projects', label: 'Curricula', icon: BookOpen },
     { href: '/evaluation-criteria', label: 'Criteria', icon: Target },
     { href: '/students', label: 'Students', icon: Users },
     { href: '/meetings', label: 'Meetings', icon: Calendar },
@@ -107,6 +110,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             >
               <Icon className="h-5 w-5 shrink-0" />
               {link.label}
+              {link.href === '/messages' && unreadCount > 0 && (
+                <Badge variant="default" className="ml-auto h-5 min-w-5 flex items-center justify-center rounded-full text-[10px] px-1.5">
+                  {unreadCount}
+                </Badge>
+              )}
             </Link>
           );
         })}
