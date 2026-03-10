@@ -47,7 +47,14 @@ export function MobileBottomNav() {
                   : 'text-sidebar-foreground/60'
               )}
             >
-              <Icon className={cn('h-5 w-5', isActive && 'scale-110')} />
+              <div className="relative">
+                <Icon className={cn('h-5 w-5', isActive && 'scale-110')} />
+                {item.href === '/messages' && unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 h-4 min-w-4 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[9px] font-bold px-1">
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
               <span className="text-[10px] font-medium">{item.label}</span>
             </Link>
           );

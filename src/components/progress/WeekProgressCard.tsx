@@ -451,6 +451,12 @@ export function WeekProgressCard({ weekProgress, student, isStudentView, onUpdat
           </div>
         )}
 
+        <AssignmentList
+          weeklyProgressId={weekProgress.id}
+          studentId={student.id}
+          isStudentView={isStudentView}
+        />
+
         <DeliverablesSection
           weekProgressId={weekProgress.id}
           studentId={student.id}
