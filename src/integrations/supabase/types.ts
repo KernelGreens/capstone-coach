@@ -99,7 +99,7 @@ export type Database = {
           submission_requirements: string | null
           title: string
           updated_at: string
-          weekly_progress_id: string
+          weekly_progress_id: string | null
         }
         Insert: {
           created_at?: string
@@ -119,7 +119,7 @@ export type Database = {
           submission_requirements?: string | null
           title: string
           updated_at?: string
-          weekly_progress_id: string
+          weekly_progress_id?: string | null
         }
         Update: {
           created_at?: string
@@ -139,7 +139,7 @@ export type Database = {
           submission_requirements?: string | null
           title?: string
           updated_at?: string
-          weekly_progress_id?: string
+          weekly_progress_id?: string | null
         }
         Relationships: [
           {
