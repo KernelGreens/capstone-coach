@@ -93,12 +93,13 @@ export type Database = {
           is_step_guide: boolean
           learning_objectives: string | null
           max_score: number | null
+          project_id: string | null
           resources: string | null
           steps: Json | null
           submission_requirements: string | null
           title: string
           updated_at: string
-          weekly_progress_id: string
+          weekly_progress_id: string | null
         }
         Insert: {
           created_at?: string
@@ -112,12 +113,13 @@ export type Database = {
           is_step_guide?: boolean
           learning_objectives?: string | null
           max_score?: number | null
+          project_id?: string | null
           resources?: string | null
           steps?: Json | null
           submission_requirements?: string | null
           title: string
           updated_at?: string
-          weekly_progress_id: string
+          weekly_progress_id?: string | null
         }
         Update: {
           created_at?: string
@@ -131,14 +133,22 @@ export type Database = {
           is_step_guide?: boolean
           learning_objectives?: string | null
           max_score?: number | null
+          project_id?: string | null
           resources?: string | null
           steps?: Json | null
           submission_requirements?: string | null
           title?: string
           updated_at?: string
-          weekly_progress_id?: string
+          weekly_progress_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "assignments_weekly_progress_id_fkey"
             columns: ["weekly_progress_id"]

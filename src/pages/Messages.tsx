@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useConversations, useMessages, Conversation } from '@/hooks/use-messages';
 import { useAuth } from '@/contexts/AuthContext';
 import { ConversationList } from '@/components/messaging/ConversationList';
@@ -9,6 +10,7 @@ import { ChatView } from '@/components/messaging/ChatView';
 import { NewConversationDialog } from '@/components/messaging/NewConversationDialog';
 import { OfficeHoursTab } from '@/components/messaging/OfficeHoursTab';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useUnreadCountsByType } from '@/hooks/use-unread-count';
 import { Loader2, Plus, ArrowLeft, MessageSquare, Users, Megaphone, HelpCircle, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -21,6 +23,7 @@ export default function Messages() {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [newDialogOpen, setNewDialogOpen] = useState(false);
   const [newDialogType, setNewDialogType] = useState<Conversation['type']>('direct');
+  const unreadCounts = useUnreadCountsByType();
 
   const convType = activeTab === 'office_hours' ? undefined : activeTab;
   const { conversations, loading: convsLoading, refetch } = useConversations(convType);
@@ -55,6 +58,15 @@ export default function Messages() {
   const showList = isMobile ? !selectedConversation : true;
   const showChat = isMobile ? !!selectedConversation : true;
 
+  const tabBadge = (count: number) => {
+    if (count <= 0) return null;
+    return (
+      <Badge variant="default" className="ml-1 h-4 min-w-4 flex items-center justify-center rounded-full text-[9px] px-1">
+        {count}
+      </Badge>
+    );
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-4">
@@ -73,26 +85,30 @@ export default function Messages() {
           }}
         >
           <TabsList className="w-full justify-start overflow-x-auto flex-nowrap">
-            <TabsTrigger value="direct" className="gap-1.5 text-xs sm:text-sm">
+            <TabsTrigger value="direct" className="gap-1 text-xs sm:text-sm">
               <MessageSquare className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Direct</span>
               <span className="sm:hidden">DMs</span>
+              {tabBadge(unreadCounts.direct)}
             </TabsTrigger>
-            <TabsTrigger value="group" className="gap-1.5 text-xs sm:text-sm">
+            <TabsTrigger value="group" className="gap-1 text-xs sm:text-sm">
               <Users className="h-3.5 w-3.5" />
               Groups
+              {tabBadge(unreadCounts.group)}
             </TabsTrigger>
-            <TabsTrigger value="announcement" className="gap-1.5 text-xs sm:text-sm">
+            <TabsTrigger value="announcement" className="gap-1 text-xs sm:text-sm">
               <Megaphone className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Announcements</span>
               <span className="sm:hidden">News</span>
+              {tabBadge(unreadCounts.announcement)}
             </TabsTrigger>
-            <TabsTrigger value="question_thread" className="gap-1.5 text-xs sm:text-sm">
+            <TabsTrigger value="question_thread" className="gap-1 text-xs sm:text-sm">
               <HelpCircle className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Q&A</span>
               <span className="sm:hidden">Q&A</span>
+              {tabBadge(unreadCounts.question_thread)}
             </TabsTrigger>
-            <TabsTrigger value="office_hours" className="gap-1.5 text-xs sm:text-sm">
+            <TabsTrigger value="office_hours" className="gap-1 text-xs sm:text-sm">
               <Clock className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Office Hours</span>
               <span className="sm:hidden">Hours</span>

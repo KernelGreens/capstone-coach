@@ -13,12 +13,13 @@ import { useToast } from '@/hooks/use-toast';
 interface AssignmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  weeklyProgressId: string;
+  weeklyProgressId?: string;
+  projectId?: string;
   assignment?: any;
   onSuccess: () => void;
 }
 
-export function AssignmentDialog({ open, onOpenChange, weeklyProgressId, assignment, onSuccess }: AssignmentDialogProps) {
+export function AssignmentDialog({ open, onOpenChange, weeklyProgressId, projectId, assignment, onSuccess }: AssignmentDialogProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
@@ -58,8 +59,7 @@ export function AssignmentDialog({ open, onOpenChange, weeklyProgressId, assignm
       return;
     }
     setSaving(true);
-    const payload = {
-      weekly_progress_id: weeklyProgressId,
+    const payload: any = {
       created_by: user!.id,
       title: form.title,
       description: form.description || null,
@@ -73,6 +73,13 @@ export function AssignmentDialog({ open, onOpenChange, weeklyProgressId, assignm
       due_date: form.due_date ? new Date(form.due_date).toISOString() : null,
       max_score: form.max_score,
     };
+
+    if (weeklyProgressId) {
+      payload.weekly_progress_id = weeklyProgressId;
+    }
+    if (projectId) {
+      payload.project_id = projectId;
+    }
 
     const { error } = assignment
       ? await supabase.from('assignments').update(payload).eq('id', assignment.id)
