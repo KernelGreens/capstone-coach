@@ -14,12 +14,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 interface AssignmentListProps {
-  weeklyProgressId: string;
-  studentId: string;
+  weeklyProgressId?: string;
+  projectId?: string;
+  studentId?: string;
   isStudentView: boolean;
 }
 
-export function AssignmentList({ weeklyProgressId, studentId, isStudentView }: AssignmentListProps) {
+export function AssignmentList({ weeklyProgressId, projectId, studentId, isStudentView }: AssignmentListProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [assignments, setAssignments] = useState<any[]>([]);
@@ -32,20 +33,27 @@ export function AssignmentList({ weeklyProgressId, studentId, isStudentView }: A
   const [submitting, setSubmitting] = useState(false);
 
   const fetchAssignments = async () => {
-    const { data } = await supabase
-      .from('assignments')
-      .select('*')
-      .eq('weekly_progress_id', weeklyProgressId)
-      .order('display_order');
+    let query = supabase.from('assignments').select('*').order('display_order');
+    
+    if (weeklyProgressId) {
+      query = query.eq('weekly_progress_id', weeklyProgressId);
+    } else if (projectId) {
+      query = query.eq('project_id', projectId);
+    } else {
+      setLoading(false);
+      return;
+    }
+
+    const { data } = await query;
     setAssignments(data || []);
 
     // Fetch submissions for this student
-    if (studentId) {
+    if (studentId && data && data.length > 0) {
       const { data: subs } = await supabase
         .from('assignment_submissions')
         .select('*')
         .eq('student_id', studentId)
-        .in('assignment_id', (data || []).map((a: any) => a.id));
+        .in('assignment_id', data.map((a: any) => a.id));
       
       const subMap: Record<string, any> = {};
       subs?.forEach((s: any) => { subMap[s.assignment_id] = s; });
@@ -56,13 +64,14 @@ export function AssignmentList({ weeklyProgressId, studentId, isStudentView }: A
 
   useEffect(() => {
     fetchAssignments();
-  }, [weeklyProgressId, studentId]);
+  }, [weeklyProgressId, projectId, studentId]);
 
   const handleSubmit = async (assignmentId: string) => {
     if (!submitContent.trim()) {
       toast({ variant: 'destructive', title: 'Please enter your submission' });
       return;
     }
+    if (!studentId) return;
     setSubmitting(true);
     const { error } = await supabase.from('assignment_submissions').insert({
       assignment_id: assignmentId,
@@ -82,7 +91,7 @@ export function AssignmentList({ weeklyProgressId, studentId, isStudentView }: A
   };
 
   if (loading) return null;
-  if (assignments.length === 0 && isStudentView) return null;
+  if (assignments.length === 0 && isStudentView && !projectId) return null;
 
   return (
     <div className="space-y-3">
@@ -97,6 +106,10 @@ export function AssignmentList({ weeklyProgressId, studentId, isStudentView }: A
           </Button>
         )}
       </div>
+
+      {assignments.length === 0 && !isStudentView && (
+        <p className="text-xs text-muted-foreground">No assignments yet. Click "Add" to create one.</p>
+      )}
 
       {assignments.map((a) => {
         const sub = submissions[a.id];
@@ -206,7 +219,7 @@ export function AssignmentList({ weeklyProgressId, studentId, isStudentView }: A
               )}
 
               {/* Student submission area */}
-              {isStudentView && !submissions[viewAssignment.id] && (
+              {isStudentView && studentId && !submissions[viewAssignment.id] && (
                 <div className="border-t pt-4 space-y-3">
                   <Label className="font-semibold">Your Submission</Label>
                   <Textarea
@@ -253,10 +266,23 @@ export function AssignmentList({ weeklyProgressId, studentId, isStudentView }: A
       )}
 
       {createOpen && (
-        <AssignmentDialog open={createOpen} onOpenChange={setCreateOpen} weeklyProgressId={weeklyProgressId} onSuccess={fetchAssignments} />
+        <AssignmentDialog
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          weeklyProgressId={weeklyProgressId}
+          projectId={projectId}
+          onSuccess={fetchAssignments}
+        />
       )}
       {editAssignment && (
-        <AssignmentDialog open={!!editAssignment} onOpenChange={() => setEditAssignment(null)} weeklyProgressId={weeklyProgressId} assignment={editAssignment} onSuccess={fetchAssignments} />
+        <AssignmentDialog
+          open={!!editAssignment}
+          onOpenChange={() => setEditAssignment(null)}
+          weeklyProgressId={weeklyProgressId}
+          projectId={projectId}
+          assignment={editAssignment}
+          onSuccess={fetchAssignments}
+        />
       )}
     </div>
   );

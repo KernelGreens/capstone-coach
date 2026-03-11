@@ -1,12 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Target, Wrench, FileCheck } from 'lucide-react';
+import { BookOpen, Target, Wrench, FileCheck, ClipboardList } from 'lucide-react';
 import { WeeklyResourcesSection } from './WeeklyResourcesSection';
 import { LessonList } from '@/components/lessons/LessonList';
 import { SuggestResourcesButton } from './SuggestResourcesButton';
 import { AssignmentList } from '@/components/assignments/AssignmentList';
 import { Button } from '@/components/ui/button';
-import { ClipboardList } from 'lucide-react';
 import { useState } from 'react';
 
 interface CurriculumCardProps {
@@ -17,6 +16,8 @@ interface CurriculumCardProps {
 }
 
 export function CurriculumCard({ project, trackId, weekNumber, canEditResources = false }: CurriculumCardProps) {
+  const [showAssignments, setShowAssignments] = useState(false);
+
   if (!project) {
     return (
       <Card className="bg-muted/30">
@@ -105,6 +106,28 @@ export function CurriculumCard({ project, trackId, weekNumber, canEditResources 
                 </Badge>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Assignments Section */}
+        {project?.id && (
+          <div className="border-t pt-4 mt-4">
+            {!showAssignments ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => setShowAssignments(true)}
+              >
+                <ClipboardList className="h-4 w-4" />
+                View Assignments
+              </Button>
+            ) : (
+              <AssignmentList
+                projectId={project.id}
+                isStudentView={!canEditResources}
+              />
+            )}
           </div>
         )}
 
