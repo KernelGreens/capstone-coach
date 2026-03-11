@@ -4,6 +4,10 @@ import { BookOpen, Target, Wrench, FileCheck } from 'lucide-react';
 import { WeeklyResourcesSection } from './WeeklyResourcesSection';
 import { LessonList } from '@/components/lessons/LessonList';
 import { SuggestResourcesButton } from './SuggestResourcesButton';
+import { AssignmentList } from '@/components/assignments/AssignmentList';
+import { Button } from '@/components/ui/button';
+import { ClipboardList } from 'lucide-react';
+import { useState } from 'react';
 
 interface CurriculumCardProps {
   project: any;

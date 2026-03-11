@@ -251,8 +251,8 @@ export default function Projects() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 print:hidden" id="projects-header">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Projects Management</h1>
-            <p className="text-sm text-muted-foreground">Define projects and assignments for each track</p>
+            <h1 className="text-2xl sm:text-3xl font-bold">Curricula Management</h1>
+            <p className="text-sm text-muted-foreground">Define curricula and assignments for each track</p>
           </div>
            <div className="flex gap-2">
             <DropdownMenu>
