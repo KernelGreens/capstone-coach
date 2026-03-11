@@ -93,6 +93,7 @@ export type Database = {
           is_step_guide: boolean
           learning_objectives: string | null
           max_score: number | null
+          project_id: string | null
           resources: string | null
           steps: Json | null
           submission_requirements: string | null
@@ -112,6 +113,7 @@ export type Database = {
           is_step_guide?: boolean
           learning_objectives?: string | null
           max_score?: number | null
+          project_id?: string | null
           resources?: string | null
           steps?: Json | null
           submission_requirements?: string | null
@@ -131,6 +133,7 @@ export type Database = {
           is_step_guide?: boolean
           learning_objectives?: string | null
           max_score?: number | null
+          project_id?: string | null
           resources?: string | null
           steps?: Json | null
           submission_requirements?: string | null
@@ -139,6 +142,13 @@ export type Database = {
           weekly_progress_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "assignments_weekly_progress_id_fkey"
             columns: ["weekly_progress_id"]
