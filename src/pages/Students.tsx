@@ -696,6 +696,16 @@ export default function Students() {
                 />
               </div>
 
+              <div>
+                <Label>Email Address</Label>
+                <Input
+                  type="email"
+                  value={editStudent.email}
+                  onChange={(e) => setEditStudent({ ...editStudent, email: e.target.value })}
+                  placeholder="student@example.com"
+                />
+              </div>
+
               <div className="border-t pt-4">
                 <Label className="text-muted-foreground text-xs">Primary Track (for curriculum)</Label>
                 <Select value={editStudent.track_id} onValueChange={(value) => setEditStudent({ ...editStudent, track_id: value })}>

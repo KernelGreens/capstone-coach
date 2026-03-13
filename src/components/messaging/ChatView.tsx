@@ -4,10 +4,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Send, Reply, Loader2, MessageSquare } from 'lucide-react';
+import { EmojiPicker } from './EmojiPicker';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ChatViewProps {
   messages: Message[];
@@ -19,10 +20,12 @@ interface ChatViewProps {
 
 export function ChatView({ messages, loading, onSend, conversationTitle, isThread }: ChatViewProps) {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -47,6 +50,11 @@ export function ChatView({ messages, loading, onSend, conversationTitle, isThrea
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const handleEmojiSelect = (emoji: string) => {
+    setInput(prev => prev + emoji);
+    textareaRef.current?.focus();
   };
 
   const getInitials = (name: string) =>
@@ -183,14 +191,19 @@ export function ChatView({ messages, loading, onSend, conversationTitle, isThrea
 
       {/* Input */}
       <div className="border-t p-3 shrink-0">
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-end">
+          <EmojiPicker onSelect={handleEmojiSelect} />
           <Textarea
+            ref={textareaRef}
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
-            className="min-h-[40px] max-h-[120px] resize-none text-sm"
-            rows={1}
+            className={cn(
+              "resize-none text-sm",
+              isMobile ? "min-h-[60px] max-h-[150px]" : "min-h-[40px] max-h-[120px]"
+            )}
+            rows={isMobile ? 2 : 1}
           />
           <Button
             size="icon"

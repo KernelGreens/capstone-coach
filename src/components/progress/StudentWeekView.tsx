@@ -6,9 +6,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { 
   CheckCircle2, Clock, AlertCircle, Upload, MessageSquare, 
-  Star, Send, BookOpen, ListChecks
+  Star, Send, BookOpen, ListChecks, Link as LinkIcon, Type
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -29,10 +30,12 @@ export function StudentWeekView({ weekProgress, project, student, onUpdate }: St
   const [selfAssessment, setSelfAssessment] = useState({ score: '', notes: '' });
   const [uploading, setUploading] = useState(false);
   const [completedTasks, setCompletedTasks] = useState<string[]>([]);
+  const [submitMode, setSubmitMode] = useState<'upload' | 'text'>('upload');
+  const [textSubmission, setTextSubmission] = useState('');
+  const [submittingText, setSubmittingText] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Parse completed tasks from notes or a stored field
     if (weekProgress.self_assessment_notes) {
       try {
         const parsed = JSON.parse(weekProgress.self_assessment_notes);
@@ -76,7 +79,6 @@ export function StudentWeekView({ weekProgress, project, student, onUpdate }: St
     }
     setCompletedTasks(newCompletedTasks);
 
-    // Save to database
     const notesData = {
       completedTasks: newCompletedTasks,
       notes: selfAssessment.notes || weekProgress.self_assessment_notes
@@ -131,6 +133,40 @@ export function StudentWeekView({ weekProgress, project, student, onUpdate }: St
       toast({ variant: 'destructive', title: 'Error', description: error.message });
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleTextSubmission = async () => {
+    if (!textSubmission.trim()) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Please enter your submission text or link' });
+      return;
+    }
+
+    setSubmittingText(true);
+    try {
+      const isLink = /^https?:\/\//i.test(textSubmission.trim());
+      const fileName = isLink ? 'Link Submission' : 'Text Submission';
+      const fileType = isLink ? 'link' : 'text';
+
+      const { error } = await supabase.from('deliverables').insert({
+        student_id: student.id,
+        weekly_progress_id: weekProgress.id,
+        file_path: '',
+        file_name: fileName,
+        file_type: fileType,
+        file_size: 0,
+        description: textSubmission.trim(),
+      });
+
+      if (error) throw error;
+
+      toast({ title: 'Success', description: 'Submission saved' });
+      setTextSubmission('');
+      onUpdate();
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Error', description: error.message });
+    } finally {
+      setSubmittingText(false);
     }
   };
 
@@ -228,7 +264,7 @@ export function StudentWeekView({ weekProgress, project, student, onUpdate }: St
         </TabsContent>
 
         <TabsContent value="submit" className="space-y-4">
-          {/* Deliverables Upload */}
+          {/* Deliverables */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
@@ -237,21 +273,70 @@ export function StudentWeekView({ weekProgress, project, student, onUpdate }: St
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Label htmlFor="file-upload" className="cursor-pointer">
-                <div className="flex items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg hover:bg-muted/50 transition-colors">
-                  <Upload className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
-                    {uploading ? 'Uploading...' : 'Click to upload files'}
-                  </span>
+              {/* Submission mode selector */}
+              <RadioGroup
+                value={submitMode}
+                onValueChange={(v) => setSubmitMode(v as 'upload' | 'text')}
+                className="flex gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="upload" id="mode-upload" />
+                  <Label htmlFor="mode-upload" className="flex items-center gap-1.5 cursor-pointer">
+                    <Upload className="h-3.5 w-3.5" />
+                    Upload File
+                  </Label>
                 </div>
-              </Label>
-              <Input
-                id="file-upload"
-                type="file"
-                className="hidden"
-                onChange={handleFileUpload}
-                disabled={uploading}
-              />
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="text" id="mode-text" />
+                  <Label htmlFor="mode-text" className="flex items-center gap-1.5 cursor-pointer">
+                    <Type className="h-3.5 w-3.5" />
+                    Text / Link
+                  </Label>
+                </div>
+              </RadioGroup>
+
+              {submitMode === 'upload' ? (
+                <>
+                  <Label htmlFor="file-upload" className="cursor-pointer">
+                    <div className="flex items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg hover:bg-muted/50 transition-colors">
+                      <Upload className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        {uploading ? 'Uploading...' : 'Click to upload files'}
+                      </span>
+                    </div>
+                  </Label>
+                  <Input
+                    id="file-upload"
+                    type="file"
+                    className="hidden"
+                    onChange={handleFileUpload}
+                    disabled={uploading}
+                  />
+                </>
+              ) : (
+                <div className="space-y-3">
+                  <Textarea
+                    placeholder="Paste a link (https://...) or type your submission text here..."
+                    value={textSubmission}
+                    onChange={(e) => setTextSubmission(e.target.value)}
+                    rows={4}
+                    className="resize-none"
+                  />
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">
+                      {textSubmission.length}/500 characters
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={handleTextSubmission}
+                      disabled={!textSubmission.trim() || submittingText}
+                    >
+                      <Send className="h-3.5 w-3.5 mr-1.5" />
+                      {submittingText ? 'Submitting...' : 'Submit'}
+                    </Button>
+                  </div>
+                </div>
+              )}
               
               <DeliverablesSection
                 weekProgressId={weekProgress.id}
