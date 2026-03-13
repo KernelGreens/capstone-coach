@@ -596,6 +596,14 @@ export default function Projects() {
                   </div>
                 )}
 
+                {/* Assignments */}
+                <div className="border-t pt-4">
+                  <AssignmentList
+                    projectId={viewProject.id}
+                    isStudentView={false}
+                  />
+                </div>
+
                 {/* Lessons */}
                 <div className="border-t pt-4">
                   <LessonList
