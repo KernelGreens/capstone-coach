@@ -42,6 +42,7 @@ export default function Students() {
 
   const [editStudent, setEditStudent] = useState({
     full_name: '',
+    email: '',
     track_id: '',
     start_date: '',
     end_date: '',
