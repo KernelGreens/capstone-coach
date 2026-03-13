@@ -42,6 +42,7 @@ export default function Students() {
 
   const [editStudent, setEditStudent] = useState({
     full_name: '',
+    email: '',
     track_id: '',
     start_date: '',
     end_date: '',
@@ -162,13 +163,18 @@ export default function Students() {
 
     setSubmitting(true);
     try {
-      // Update profile name if changed
-      if (editStudent.full_name.trim() && selectedStudent.user_id) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ full_name: editStudent.full_name.trim() })
-          .eq('id', selectedStudent.user_id);
-        if (profileError) throw profileError;
+      // Update profile name and email if changed
+      if (selectedStudent.user_id) {
+        const profileUpdate: any = {};
+        if (editStudent.full_name.trim()) profileUpdate.full_name = editStudent.full_name.trim();
+        if (editStudent.email.trim()) profileUpdate.email = editStudent.email.trim();
+        if (Object.keys(profileUpdate).length > 0) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update(profileUpdate)
+            .eq('id', selectedStudent.user_id);
+          if (profileError) throw profileError;
+        }
       }
 
       const { error } = await supabase
@@ -252,6 +258,7 @@ export default function Students() {
     setSelectedStudent(student);
     setEditStudent({
       full_name: student.profiles?.full_name || '',
+      email: student.profiles?.email || '',
       track_id: student.track_id || '',
       start_date: student.start_date,
       end_date: student.end_date,
@@ -686,6 +693,16 @@ export default function Students() {
                   value={editStudent.full_name}
                   onChange={(e) => setEditStudent({ ...editStudent, full_name: e.target.value })}
                   placeholder="Student's full name"
+                />
+              </div>
+
+              <div>
+                <Label>Email Address</Label>
+                <Input
+                  type="email"
+                  value={editStudent.email}
+                  onChange={(e) => setEditStudent({ ...editStudent, email: e.target.value })}
+                  placeholder="student@example.com"
                 />
               </div>
 

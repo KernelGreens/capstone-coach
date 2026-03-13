@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, BookOpen, Edit, Trash2, Search, Eye, Printer, Download, FileDown, GraduationCap } from 'lucide-react';
 import { LessonList } from '@/components/lessons/LessonList';
+import { AssignmentList } from '@/components/assignments/AssignmentList';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -594,6 +595,14 @@ export default function Projects() {
                     <p className="text-sm text-muted-foreground">{viewProject.tools_technologies}</p>
                   </div>
                 )}
+
+                {/* Assignments */}
+                <div className="border-t pt-4">
+                  <AssignmentList
+                    projectId={viewProject.id}
+                    isStudentView={false}
+                  />
+                </div>
 
                 {/* Lessons */}
                 <div className="border-t pt-4">

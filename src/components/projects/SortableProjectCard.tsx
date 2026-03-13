@@ -5,9 +5,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Eye, Edit, Trash2, GripVertical, GraduationCap } from 'lucide-react';
+import { BookOpen, Eye, Edit, Trash2, GripVertical, GraduationCap, ClipboardList } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LessonList } from '@/components/lessons/LessonList';
+import { AssignmentList } from '@/components/assignments/AssignmentList';
 
 interface SortableProjectCardProps {
   project: any;
@@ -19,18 +20,22 @@ interface SortableProjectCardProps {
 
 export function SortableProjectCard({ project, onEdit, onDelete, onView, isDraggable = false }: SortableProjectCardProps) {
   const [lessonsOpen, setLessonsOpen] = useState(false);
+  const [assignmentsOpen, setAssignmentsOpen] = useState(false);
   const [lessonCount, setLessonCount] = useState(0);
+  const [assignmentCount, setAssignmentCount] = useState(0);
 
   useEffect(() => {
-    const fetchCount = async () => {
-      const { count } = await supabase
-        .from('lessons')
-        .select('*', { count: 'exact', head: true })
-        .eq('project_id', project.id);
-      setLessonCount(count ?? 0);
+    const fetchCounts = async () => {
+      const [lessonsRes, assignmentsRes] = await Promise.all([
+        supabase.from('lessons').select('*', { count: 'exact', head: true }).eq('project_id', project.id),
+        supabase.from('assignments').select('*', { count: 'exact', head: true }).eq('project_id', project.id),
+      ]);
+      setLessonCount(lessonsRes.count ?? 0);
+      setAssignmentCount(assignmentsRes.count ?? 0);
     };
-    fetchCount();
-  }, [project.id, lessonsOpen]);
+    fetchCounts();
+  }, [project.id, lessonsOpen, assignmentsOpen]);
+
   const {
     attributes,
     listeners,
@@ -86,6 +91,15 @@ export function SortableProjectCard({ project, onEdit, onDelete, onView, isDragg
               <Eye className="h-4 w-4 mr-1" />
               View Details
             </Button>
+            <Button variant="outline" size="sm" onClick={() => setAssignmentsOpen(true)} className="relative">
+              <ClipboardList className="h-4 w-4 mr-1" />
+              Assignments
+              {assignmentCount > 0 && (
+                <Badge className="ml-1.5 h-5 min-w-[20px] px-1.5 text-[10px] leading-none">
+                  {assignmentCount}
+                </Badge>
+              )}
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setLessonsOpen(true)} className="relative">
               <GraduationCap className="h-4 w-4 mr-1" />
               Lessons
@@ -118,6 +132,21 @@ export function SortableProjectCard({ project, onEdit, onDelete, onView, isDragg
           <LessonList
             projectId={project.id}
             isSuperviorView={true}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={assignmentsOpen} onOpenChange={setAssignmentsOpen}>
+        <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Assignments — {project.title}
+              {project.week_number && ` (Week ${project.week_number})`}
+            </DialogTitle>
+          </DialogHeader>
+          <AssignmentList
+            projectId={project.id}
+            isStudentView={false}
           />
         </DialogContent>
       </Dialog>

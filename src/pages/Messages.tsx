@@ -126,8 +126,7 @@ export default function Messages() {
               <div
                 className={cn(
                   'border rounded-lg overflow-hidden mt-4',
-                  'flex',
-                  isMobile ? 'flex-col h-[calc(100vh-14rem)]' : 'h-[calc(100vh-14rem)]'
+                  isMobile ? 'flex flex-col h-[calc(100vh-14rem)]' : 'flex h-[calc(100vh-14rem)]'
                 )}
               >
                 {/* Conversation list */}

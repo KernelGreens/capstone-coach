@@ -333,19 +333,20 @@ export default function Settings() {
       // Upload new avatar if selected
       if (avatarFile) {
         const fileExt = avatarFile.name.split('.').pop();
-        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+        const fileName = `${Date.now()}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
         
         const { error: uploadError } = await supabase.storage
-          .from('deliverables')
-          .upload(`avatars/${fileName}`, avatarFile);
+          .from('avatars')
+          .upload(filePath, avatarFile, { upsert: true });
 
         if (uploadError) {
           throw new Error('Failed to upload avatar');
         }
 
         const { data: publicUrl } = supabase.storage
-          .from('deliverables')
-          .getPublicUrl(`avatars/${fileName}`);
+          .from('avatars')
+          .getPublicUrl(filePath);
         
         avatarUrl = publicUrl.publicUrl;
       }
