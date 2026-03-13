@@ -253,6 +253,7 @@ export default function Students() {
     setSelectedStudent(student);
     setEditStudent({
       full_name: student.profiles?.full_name || '',
+      email: student.profiles?.email || '',
       track_id: student.track_id || '',
       start_date: student.start_date,
       end_date: student.end_date,
