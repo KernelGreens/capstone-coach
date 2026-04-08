@@ -403,42 +403,44 @@ export default function Meetings() {
           </Card>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {meetings.map((meeting) => (
-              <Card key={meeting.id} className="hover:shadow-lg transition-shadow">
+            {groupedMeetings.map((group) => {
+              const firstMeeting = group.meetings[0];
+              return (
+              <Card key={group.key} className="hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg">{meeting.title}</CardTitle>
-                    <Badge className={getStatusColor(meeting.status)}>
-                      {meeting.status}
+                    <CardTitle className="text-lg">{group.title}</CardTitle>
+                    <Badge className={getStatusColor(group.status)}>
+                      {group.status}
                     </Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span>{meeting.student_profile?.full_name || 'Student'}</span>
+                  <div className="flex items-start gap-2 text-sm">
+                    <User className="h-4 w-4 text-muted-foreground mt-0.5" />
+                    <span>{group.studentNames.join(', ')}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>{format(new Date(meeting.scheduled_at), 'PPP')}</span>
+                    <span>{format(new Date(group.scheduled_at), 'PPP')}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="h-4 w-4 text-muted-foreground" />
                     <span>
-                      {format(new Date(meeting.scheduled_at), 'p')} ({meeting.duration_minutes} min)
+                      {format(new Date(group.scheduled_at), 'p')} ({group.duration_minutes} min)
                     </span>
                   </div>
-                  {meeting.location && (
+                  {group.location && (
                     <div className="flex items-center gap-2 text-sm">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span>{meeting.location}</span>
+                      <span>{group.location}</span>
                     </div>
                   )}
-                  {meeting.meeting_link && (
+                  {group.meeting_link && (
                     <div className="flex items-center gap-2 text-sm">
                       <Video className="h-4 w-4 text-muted-foreground" />
                       <a
-                        href={meeting.meeting_link}
+                        href={group.meeting_link}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary hover:underline"
@@ -447,20 +449,20 @@ export default function Meetings() {
                       </a>
                     </div>
                   )}
-                  {meeting.description && (
+                  {group.description && (
                     <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap">
-                      {meeting.description}
+                      {group.description}
                     </p>
                   )}
                   <div className="flex flex-col gap-2 pt-3 border-t">
-                    {meeting.status === 'scheduled' && (
+                    {group.status === 'scheduled' && (
                       <Button
                         size="sm"
                         className="w-full"
                         onClick={() =>
                           userRole === 'supervisor'
-                            ? handleStartVideoCall(meeting)
-                            : setVideoCallMeeting(meeting)
+                            ? handleStartVideoCall(firstMeeting)
+                            : setVideoCallMeeting(firstMeeting)
                         }
                       >
                         <Video className="mr-2 h-4 w-4" />
@@ -473,10 +475,10 @@ export default function Meetings() {
                           size="sm"
                           variant="outline"
                           className="w-full"
-                          onClick={() => handleGenerateSlides(meeting)}
-                          disabled={generatingSlides === meeting.id}
+                          onClick={() => handleGenerateSlides(firstMeeting)}
+                          disabled={generatingSlides === firstMeeting.id}
                         >
-                          {generatingSlides === meeting.id ? (
+                          {generatingSlides === firstMeeting.id ? (
                             <>
                               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                               Generating Slides...
@@ -493,7 +495,7 @@ export default function Meetings() {
                             size="sm"
                             variant="outline"
                             className="flex-1"
-                            onClick={() => handleEdit(meeting)}
+                            onClick={() => handleEdit(firstMeeting)}
                           >
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit
@@ -502,7 +504,7 @@ export default function Meetings() {
                             size="sm"
                             variant="outline"
                             className="text-destructive hover:text-destructive"
-                            onClick={() => handleDeleteClick(meeting)}
+                            onClick={() => handleDeleteClick(firstMeeting)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -512,55 +514,6 @@ export default function Meetings() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
-        )}
-
-        {userRole === 'supervisor' && (
-          <MeetingDialog
-            open={dialogOpen}
-            onOpenChange={(open) => {
-              setDialogOpen(open);
-              if (!open) setEditingMeeting(null);
-            }}
-            meeting={editingMeeting}
-            students={students}
-            onSave={handleSave}
-            saving={saving}
-          />
-        )}
-
-        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Meeting</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete "{meetingToDelete?.title}"? This action cannot be
-                undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteConfirm}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-
-        {videoCallMeeting && (
-          <VideoCallDialog
-            open={!!videoCallMeeting}
-            onOpenChange={(open) => { if (!open) setVideoCallMeeting(null); }}
-            roomName={`capstone-meeting-${videoCallMeeting.id}`}
-            meetingTitle={videoCallMeeting.title}
-            userDisplayName={user?.email?.split('@')[0] || 'User'}
-          />
-        )}
-      </div>
-    </DashboardLayout>
-  );
-}
