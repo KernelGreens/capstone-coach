@@ -91,7 +91,7 @@ export function NewConversationDialog({ open, onOpenChange, defaultType, onCreat
           type,
           title: type === 'direct' ? null : title,
           description: description || null,
-          track_id: selectedTrack || null,
+          track_id: selectedTrack && selectedTrack !== 'none' ? selectedTrack : null,
           created_by: user.id,
         })
         .select()
