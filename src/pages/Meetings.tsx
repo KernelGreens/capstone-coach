@@ -50,6 +50,20 @@ interface Meeting {
   };
 }
 
+interface GroupedMeeting {
+  key: string;
+  meetings: Meeting[];
+  title: string;
+  scheduled_at: string;
+  duration_minutes: number;
+  location: string | null;
+  meeting_link: string | null;
+  description: string | null;
+  status: string;
+  supervisor_id: string;
+  studentNames: string[];
+}
+
 interface Student {
   id: string;
   user_id: string;
