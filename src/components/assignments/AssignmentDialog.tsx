@@ -5,10 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Trash2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Trash2, Eye, Code } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import ReactMarkdown from 'react-markdown';
 
 interface AssignmentDialogProps {
   open: boolean;
@@ -159,7 +161,30 @@ export function AssignmentDialog({ open, onOpenChange, weeklyProgressId, project
                     <Button size="icon" variant="ghost" onClick={() => removeStep(idx)}><Trash2 className="h-3 w-3" /></Button>
                   </div>
                   <Input placeholder="Step title" value={step.title} onChange={e => updateStep(idx, 'title', e.target.value)} />
-                  <Textarea placeholder="Step instructions" value={step.content} onChange={e => updateStep(idx, 'content', e.target.value)} rows={2} />
+                  <Tabs defaultValue="write" className="w-full">
+                    <TabsList className="h-7 mb-1">
+                      <TabsTrigger value="write" className="text-xs h-6 gap-1 px-2"><Code className="h-3 w-3" />Write</TabsTrigger>
+                      <TabsTrigger value="preview" className="text-xs h-6 gap-1 px-2"><Eye className="h-3 w-3" />Preview</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="write" className="mt-0">
+                      <Textarea
+                        placeholder="Step instructions (supports Markdown: **bold**, `code`, ```code blocks```)"
+                        value={step.content}
+                        onChange={e => updateStep(idx, 'content', e.target.value)}
+                        rows={4}
+                        className="font-mono text-sm"
+                      />
+                    </TabsContent>
+                    <TabsContent value="preview" className="mt-0">
+                      <div className="min-h-[6rem] border rounded-md p-3 prose prose-sm dark:prose-invert max-w-none bg-muted/30">
+                        {step.content ? (
+                          <ReactMarkdown>{step.content}</ReactMarkdown>
+                        ) : (
+                          <p className="text-muted-foreground italic">Nothing to preview</p>
+                        )}
+                      </div>
+                    </TabsContent>
+                  </Tabs>
                   <Input placeholder="💡 Pro tip (optional)" value={step.tip} onChange={e => updateStep(idx, 'tip', e.target.value)} />
                 </div>
               ))}
