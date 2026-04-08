@@ -517,3 +517,53 @@ export default function Meetings() {
               );
             })}
           </div>
+        )}
+
+        {userRole === 'supervisor' && (
+          <MeetingDialog
+            open={dialogOpen}
+            onOpenChange={(open) => {
+              setDialogOpen(open);
+              if (!open) setEditingMeeting(null);
+            }}
+            meeting={editingMeeting}
+            students={students}
+            onSave={handleSave}
+            saving={saving}
+          />
+        )}
+
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Meeting</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{meetingToDelete?.title}"? This action cannot be
+                undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {videoCallMeeting && (
+          <VideoCallDialog
+            open={!!videoCallMeeting}
+            onOpenChange={(open) => { if (!open) setVideoCallMeeting(null); }}
+            roomName={`capstone-meeting-${videoCallMeeting.id}`}
+            meetingTitle={videoCallMeeting.title}
+            userDisplayName={user?.email?.split('@')[0] || 'User'}
+          />
+        )}
+      </div>
+    </DashboardLayout>
+  );
+}
