@@ -330,6 +330,29 @@ export default function Meetings() {
     }
   };
 
+  // Group meetings by title + scheduled_at + supervisor_id
+  const groupedMeetings: GroupedMeeting[] = (() => {
+    const groups = new Map<string, Meeting[]>();
+    meetings.forEach(m => {
+      const key = `${m.title}|${m.scheduled_at}|${m.supervisor_id}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(m);
+    });
+    return Array.from(groups.entries()).map(([key, grp]) => ({
+      key,
+      meetings: grp,
+      title: grp[0].title,
+      scheduled_at: grp[0].scheduled_at,
+      duration_minutes: grp[0].duration_minutes,
+      location: grp[0].location,
+      meeting_link: grp[0].meeting_link,
+      description: grp[0].description,
+      status: grp[0].status,
+      supervisor_id: grp[0].supervisor_id,
+      studentNames: grp.map(m => m.student_profile?.full_name || 'Student'),
+    }));
+  })();
+
   if (loading) {
     return (
       <DashboardLayout>
