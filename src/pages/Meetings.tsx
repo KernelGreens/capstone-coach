@@ -19,7 +19,9 @@ import {
   Trash2,
   User,
   Presentation,
+  ChevronDown,
 } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { generatePptx } from '@/lib/generatePptx';
