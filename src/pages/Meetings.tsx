@@ -408,114 +408,123 @@ export default function Meetings() {
             {groupedMeetings.map((group) => {
               const firstMeeting = group.meetings[0];
               return (
-              <Card key={group.key} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg">{group.title}</CardTitle>
-                    <Badge className={getStatusColor(group.status)}>
-                      {group.status}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-start gap-2 text-sm">
-                    <User className="h-4 w-4 text-muted-foreground mt-0.5" />
-                    <span>{group.studentNames.join(', ')}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>{format(new Date(group.scheduled_at), 'PPP')}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span>
-                      {format(new Date(group.scheduled_at), 'p')} ({group.duration_minutes} min)
-                    </span>
-                  </div>
-                  {group.location && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span>{group.location}</span>
-                    </div>
-                  )}
-                  {group.meeting_link && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Video className="h-4 w-4 text-muted-foreground" />
-                      <a
-                        href={group.meeting_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline"
-                      >
-                        Join Video Call
-                      </a>
-                    </div>
-                  )}
-                  {group.description && (
-                    <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap">
-                      {group.description}
-                    </p>
-                  )}
-                  <div className="flex flex-col gap-2 pt-3 border-t">
-                    {group.status === 'scheduled' && (
-                      <Button
-                        size="sm"
-                        className="w-full"
-                        onClick={() =>
-                          userRole === 'supervisor'
-                            ? handleStartVideoCall(firstMeeting)
-                            : setVideoCallMeeting(firstMeeting)
-                        }
-                      >
-                        <Video className="mr-2 h-4 w-4" />
-                        {userRole === 'supervisor' ? 'Start Video Call' : 'Join Video Call'}
-                      </Button>
-                    )}
-                    {userRole === 'supervisor' && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="w-full"
-                          onClick={() => handleGenerateSlides(firstMeeting)}
-                          disabled={generatingSlides === firstMeeting.id}
-                        >
-                          {generatingSlides === firstMeeting.id ? (
+                <Collapsible key={group.key}>
+                  <Card className="hover:shadow-lg transition-shadow">
+                    <CollapsibleTrigger className="w-full text-left">
+                      <CardHeader className="pb-3">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 min-w-0">
+                            <CardTitle className="text-lg">{group.title}</CardTitle>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                              <Calendar className="h-3.5 w-3.5 shrink-0" />
+                              <span>{format(new Date(group.scheduled_at), 'PPP p')}</span>
+                            </div>
+                            <div className="flex items-start gap-2 text-sm text-muted-foreground mt-1">
+                              <User className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                              <span className="truncate">{group.studentNames.join(', ')}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0 ml-2">
+                            <Badge className={getStatusColor(group.status)}>
+                              {group.status}
+                            </Badge>
+                            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 [&[data-state=open]]:rotate-180" />
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <CardContent className="space-y-3 pt-0">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <span>{group.duration_minutes} minutes</span>
+                        </div>
+                        {group.location && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <span>{group.location}</span>
+                          </div>
+                        )}
+                        {group.meeting_link && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Video className="h-4 w-4 text-muted-foreground" />
+                            <a
+                              href={group.meeting_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline"
+                            >
+                              Join Video Call
+                            </a>
+                          </div>
+                        )}
+                        {group.description && (
+                          <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap">
+                            {group.description}
+                          </p>
+                        )}
+                        <div className="flex flex-col gap-2 pt-3 border-t">
+                          {group.status === 'scheduled' && (
+                            <Button
+                              size="sm"
+                              className="w-full"
+                              onClick={() =>
+                                userRole === 'supervisor'
+                                  ? handleStartVideoCall(firstMeeting)
+                                  : setVideoCallMeeting(firstMeeting)
+                              }
+                            >
+                              <Video className="mr-2 h-4 w-4" />
+                              {userRole === 'supervisor' ? 'Start Video Call' : 'Join Video Call'}
+                            </Button>
+                          )}
+                          {userRole === 'supervisor' && (
                             <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Generating Slides...
-                            </>
-                          ) : (
-                            <>
-                              <Presentation className="mr-2 h-4 w-4" />
-                              Generate Slides
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => handleGenerateSlides(firstMeeting)}
+                                disabled={generatingSlides === firstMeeting.id}
+                              >
+                                {generatingSlides === firstMeeting.id ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Generating Slides...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Presentation className="mr-2 h-4 w-4" />
+                                    Generate Slides
+                                  </>
+                                )}
+                              </Button>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="flex-1"
+                                  onClick={() => handleEdit(firstMeeting)}
+                                >
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Edit
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-destructive hover:text-destructive"
+                                  onClick={() => handleDeleteClick(firstMeeting)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </>
                           )}
-                        </Button>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="flex-1"
-                            onClick={() => handleEdit(firstMeeting)}
-                          >
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => handleDeleteClick(firstMeeting)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
                         </div>
-                      </>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                      </CardContent>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
               );
             })}
           </div>
