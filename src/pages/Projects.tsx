@@ -256,7 +256,21 @@ export default function Projects() {
       const finalErr = finalResults.find(r => r.error)?.error;
       if (finalErr) throw finalErr;
 
-      toast({ title: 'Reordered', description: 'Week numbers updated successfully' });
+      // Sync students' weekly_progress rows that reference these projects so the
+      // new ordering is visible to students immediately.
+      try {
+        const syncPromises = updates.map((p: any) =>
+          supabase
+            .from('weekly_progress')
+            .update({ week_number: p.week_number, week_focus: p.title })
+            .eq('project_id', p.id)
+        );
+        await Promise.all(syncPromises);
+      } catch (syncErr) {
+        console.error('Weekly progress sync warning:', syncErr);
+      }
+
+      toast({ title: 'Reordered', description: 'Week numbers updated and synced to students' });
       fetchData(); // refresh authoritative state
     } catch (err: any) {
       console.error('Reorder error:', err);
