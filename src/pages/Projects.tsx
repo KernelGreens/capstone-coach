@@ -467,7 +467,9 @@ export default function Projects() {
                 <>
                   {weeklyProjects.length > 0 && (
                     <div>
-                      <h3 className="text-sm font-medium text-muted-foreground mb-2">Weekly Projects (drag to reorder)</h3>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                        Weekly Projects {canReorder ? '(drag to reorder)' : '(select a single track to reorder)'}
+                      </h3>
                       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} modifiers={[restrictToVerticalAxis]}>
                         <SortableContext items={weeklyProjects.map((p: any) => p.id)} strategy={verticalListSortingStrategy}>
                           <div className="space-y-4">
@@ -478,7 +480,7 @@ export default function Projects() {
                                 onEdit={handleEdit}
                                 onDelete={setDeletingProject}
                                 onView={setViewProject}
-                                isDraggable
+                                isDraggable={canReorder}
                               />
                             ))}
                           </div>
