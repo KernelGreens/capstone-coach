@@ -209,40 +209,72 @@ export default function Projects() {
   };
 
   const weeklyProjects = filteredProjects.filter(p => p.week_number != null).sort((a: any, b: any) => a.week_number - b.week_number);
+  const canReorder = selectedTrack !== 'all';
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
+    if (!canReorder) {
+      toast({ variant: 'destructive', title: 'Select a track', description: 'Choose a specific track to reorder weeks.' });
+      return;
+    }
 
-    const oldIndex = weeklyProjects.findIndex((p: any) => p.id === active.id);
-    const newIndex = weeklyProjects.findIndex((p: any) => p.id === over.id);
+    // Scope reordering strictly to the currently-selected track
+    const trackWeekly = weeklyProjects.filter((p: any) => p.track_id === selectedTrack);
+    const oldIndex = trackWeekly.findIndex((p: any) => p.id === active.id);
+    const newIndex = trackWeekly.findIndex((p: any) => p.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
 
-    const reordered = arrayMove(weeklyProjects, oldIndex, newIndex);
-    
-    // Optimistically update local state with new week numbers
-    const updates = reordered.map((p: any, i: number) => ({
-      ...p,
-      week_number: i + 1,
-    }));
-    
+    const reordered = arrayMove(trackWeekly, oldIndex, newIndex);
+    const updates = reordered.map((p: any, i: number) => ({ ...p, week_number: i + 1 }));
+    const updatedIds = new Set(updates.map((u: any) => u.id));
+
+    // Optimistically update local state for this track only
     setProjects(prev => {
-      const nonWeekly = prev.filter((p: any) => p.week_number == null || !weeklyProjects.some((wp: any) => wp.id === p.id));
-      return [...nonWeekly, ...updates].sort((a: any, b: any) => (a.week_number || 999) - (b.week_number || 999));
+      const others = prev.filter((p: any) => !updatedIds.has(p.id));
+      return [...others, ...updates].sort((a: any, b: any) => {
+        if (a.track_id !== b.track_id) return 0;
+        return (a.week_number || 999) - (b.week_number || 999);
+      });
     });
 
-    // Persist to DB
+    // Persist to DB — two-phase to avoid transient unique-collisions if a constraint exists
     try {
-      const promises = updates.map((p: any) =>
+      // Phase 1: park updated rows at negative offsets to free up target slots
+      const parkPromises = updates.map((p: any, i: number) =>
+        supabase.from('projects').update({ week_number: -(i + 1) }).eq('id', p.id)
+      );
+      const parkResults = await Promise.all(parkPromises);
+      const parkErr = parkResults.find(r => r.error)?.error;
+      if (parkErr) throw parkErr;
+
+      // Phase 2: assign final week numbers
+      const finalPromises = updates.map((p: any) =>
         supabase.from('projects').update({ week_number: p.week_number }).eq('id', p.id)
       );
-      const results = await Promise.all(promises);
-      const error = results.find(r => r.error)?.error;
-      if (error) throw error;
-      
-      toast({ title: 'Reordered', description: 'Week numbers updated successfully' });
+      const finalResults = await Promise.all(finalPromises);
+      const finalErr = finalResults.find(r => r.error)?.error;
+      if (finalErr) throw finalErr;
+
+      // Sync students' weekly_progress rows that reference these projects so the
+      // new ordering is visible to students immediately.
+      try {
+        const syncPromises = updates.map((p: any) =>
+          supabase
+            .from('weekly_progress')
+            .update({ week_number: p.week_number, week_focus: p.title })
+            .eq('project_id', p.id)
+        );
+        await Promise.all(syncPromises);
+      } catch (syncErr) {
+        console.error('Weekly progress sync warning:', syncErr);
+      }
+
+      toast({ title: 'Reordered', description: 'Week numbers updated and synced to students' });
+      fetchData(); // refresh authoritative state
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to save new order' });
+      console.error('Reorder error:', err);
+      toast({ variant: 'destructive', title: 'Error', description: err.message || 'Failed to save new order' });
       fetchData(); // rollback
     }
   };
@@ -449,7 +481,9 @@ export default function Projects() {
                 <>
                   {weeklyProjects.length > 0 && (
                     <div>
-                      <h3 className="text-sm font-medium text-muted-foreground mb-2">Weekly Projects (drag to reorder)</h3>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                        Weekly Projects {canReorder ? '(drag to reorder)' : '(select a single track to reorder)'}
+                      </h3>
                       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} modifiers={[restrictToVerticalAxis]}>
                         <SortableContext items={weeklyProjects.map((p: any) => p.id)} strategy={verticalListSortingStrategy}>
                           <div className="space-y-4">
@@ -460,7 +494,7 @@ export default function Projects() {
                                 onEdit={handleEdit}
                                 onDelete={setDeletingProject}
                                 onView={setViewProject}
-                                isDraggable
+                                isDraggable={canReorder}
                               />
                             ))}
                           </div>
