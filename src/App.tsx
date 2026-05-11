@@ -17,6 +17,7 @@ import Evaluations from "./pages/Evaluations";
 import Meetings from "./pages/Meetings";
 import Resources from "./pages/Resources";
 import Setup from "./pages/Setup";
+import SelectContext from "./pages/SelectContext";
 import Settings from "./pages/Settings";
 import EvaluationCriteria from "./pages/EvaluationCriteria";
 import SubmitFeedback from "./pages/SubmitFeedback";
