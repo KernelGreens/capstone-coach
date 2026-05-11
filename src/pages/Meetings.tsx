@@ -95,15 +95,16 @@ export default function Meetings() {
     if (userRole === 'supervisor') {
       fetchStudents();
     }
-  }, [userRole]);
+  }, [userRole, activeStudentId]);
 
   const fetchMeetings = async () => {
     setLoading(true);
     
-    const { data, error } = await supabase
-      .from('meetings')
-      .select('*')
-      .order('scheduled_at', { ascending: true });
+    let query = supabase.from('meetings').select('*');
+    if (userRole === 'student' && activeStudentId) {
+      query = query.eq('student_id', activeStudentId);
+    }
+    const { data, error } = await query.order('scheduled_at', { ascending: true });
 
     if (error) {
       toast({
