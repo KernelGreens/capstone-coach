@@ -75,7 +75,7 @@ interface Student {
 }
 
 export default function Meetings() {
-  const { user, userRole } = useAuth();
+  const { user, userRole, activeStudentId } = useAuth();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
