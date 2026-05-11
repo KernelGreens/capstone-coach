@@ -54,10 +54,14 @@ export function QuizPlayer({ quizId, onClose }: QuizPlayerProps) {
   }, [timeLeft, finished]);
 
   const loadQuiz = async () => {
+    const studentQuery = supabase.from('students').select('id');
+    const studentReq = activeStudentId
+      ? studentQuery.eq('id', activeStudentId).maybeSingle()
+      : studentQuery.eq('user_id', user!.id).maybeSingle();
     const [{ data: q }, { data: qs }, { data: stu }] = await Promise.all([
       supabase.from('quizzes').select('*').eq('id', quizId).single(),
       supabase.from('quiz_questions').select('*').eq('quiz_id', quizId).order('display_order'),
-      supabase.from('students').select('id').eq('user_id', user!.id).maybeSingle(),
+      studentReq,
     ]);
     setQuiz(q);
     setQuestions(qs || []);
