@@ -103,12 +103,10 @@ export function OfficeHoursTab() {
         }
       }
     } else {
-      // Student: fetch own bookings
-      const { data: myStudent } = await supabase
-        .from('students')
-        .select('id')
-        .eq('user_id', user?.id || '')
-        .maybeSingle();
+      // Student: fetch own bookings (scoped to active membership)
+      let sq = supabase.from('students').select('id');
+      sq = activeStudentId ? sq.eq('id', activeStudentId) : sq.eq('user_id', user?.id || '');
+      const { data: myStudent } = await sq.maybeSingle();
 
       if (myStudent) {
         const { data: bks } = await supabase
