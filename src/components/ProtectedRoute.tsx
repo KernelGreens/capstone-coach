@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { user, userRole, loading } = useAuth();
+  const { user, userRole, needsContextSelection, loading } = useAuth();
 
   if (loading) {
     return (
@@ -20,6 +20,10 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
 
   if (!user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  if (needsContextSelection) {
+    return <Navigate to="/select-context" replace />;
   }
 
   if (!userRole) {
