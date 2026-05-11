@@ -12,7 +12,7 @@ import { Eye, Edit, Share2, Download } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 export default function Portfolio() {
-  const { user, userRole, loading: authLoading } = useAuth();
+  const { user, userRole, activeStudentId, loading: authLoading } = useAuth();
   const [searchParams] = useSearchParams();
   const shareToken = searchParams.get('token');
   const studentIdParam = searchParams.get('student');
@@ -69,12 +69,10 @@ export default function Portfolio() {
           .single();
         setPortfolio(p);
       } else if (user && userRole === 'student') {
-        // Student viewing own portfolio
-        const { data: s } = await supabase
-          .from('students')
-          .select('*, profiles:user_id(*)')
-          .eq('user_id', user.id)
-          .single();
+        // Student viewing own portfolio (scoped to active membership)
+        let sq = supabase.from('students').select('*, profiles:user_id(*)');
+        sq = activeStudentId ? sq.eq('id', activeStudentId) : sq.eq('user_id', user.id);
+        const { data: s } = await sq.maybeSingle();
         if (s) {
           setStudent(s);
           setProfile((s as any).profiles);

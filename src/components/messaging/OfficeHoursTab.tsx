@@ -40,7 +40,7 @@ interface Booking {
 }
 
 export function OfficeHoursTab() {
-  const { user, userRole } = useAuth();
+  const { user, userRole, activeStudentId } = useAuth();
   const { toast } = useToast();
   const [officeHours, setOfficeHours] = useState<OfficeHour[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -103,12 +103,10 @@ export function OfficeHoursTab() {
         }
       }
     } else {
-      // Student: fetch own bookings
-      const { data: myStudent } = await supabase
-        .from('students')
-        .select('id')
-        .eq('user_id', user?.id || '')
-        .maybeSingle();
+      // Student: fetch own bookings (scoped to active membership)
+      let sq = supabase.from('students').select('id');
+      sq = activeStudentId ? sq.eq('id', activeStudentId) : sq.eq('user_id', user?.id || '');
+      const { data: myStudent } = await sq.maybeSingle();
 
       if (myStudent) {
         const { data: bks } = await supabase
@@ -182,11 +180,9 @@ export function OfficeHoursTab() {
     if (!selectedSlot || !selectedDate || !selectedTime || !user) return;
     setSaving(true);
 
-    const { data: myStudent } = await supabase
-      .from('students')
-      .select('id')
-      .eq('user_id', user.id)
-      .maybeSingle();
+    let sq = supabase.from('students').select('id');
+    sq = activeStudentId ? sq.eq('id', activeStudentId) : sq.eq('user_id', user.id);
+    const { data: myStudent } = await sq.maybeSingle();
 
     if (!myStudent) {
       toast({ title: 'Error', description: 'Student record not found', variant: 'destructive' });

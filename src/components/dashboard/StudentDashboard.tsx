@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export function StudentDashboard() {
-  const { user } = useAuth();
+  const { user, activeStudentId } = useAuth();
   const isMobile = useIsMobile();
   const [stats, setStats] = useState({
     currentWeek: 0,
@@ -22,14 +22,12 @@ export function StudentDashboard() {
     if (user) {
       fetchStats();
     }
-  }, [user]);
+  }, [user, activeStudentId]);
 
   const fetchStats = async () => {
-    const { data: studentData } = await supabase
-      .from('students')
-      .select('*')
-      .eq('user_id', user?.id)
-      .single();
+    let q = supabase.from('students').select('*');
+    q = activeStudentId ? q.eq('id', activeStudentId) : q.eq('user_id', user?.id);
+    const { data: studentData } = await q.maybeSingle();
 
     if (!studentData) return;
 

@@ -80,7 +80,7 @@ const statusConfig: Record<string, { variant: 'default' | 'secondary' | 'destruc
 };
 
 export default function CapstoneProject() {
-  const { user, userRole } = useAuth();
+  const { user, userRole, activeStudentId } = useAuth();
   const isSupervisor = userRole === 'supervisor';
 
   const [loading, setLoading] = useState(true);
@@ -107,6 +107,9 @@ export default function CapstoneProject() {
     setLoading(true);
     try {
       let query = supabase.from('capstone_proposals').select('*');
+      if (userRole === 'student' && activeStudentId) {
+        query = query.eq('student_id', activeStudentId);
+      }
       const { data, error } = await query.order('created_at', { ascending: false });
       if (error) throw error;
 
@@ -150,7 +153,9 @@ export default function CapstoneProject() {
 
   async function handleCreateProposal() {
     if (!user) return;
-    const { data: student } = await supabase.from('students').select('id').eq('user_id', user.id).single();
+    let sq = supabase.from('students').select('id');
+    sq = activeStudentId ? sq.eq('id', activeStudentId) : sq.eq('user_id', user.id);
+    const { data: student } = await sq.maybeSingle();
     if (!student) { toast({ title: 'Error', description: 'Student record not found', variant: 'destructive' }); return; }
 
     const { error } = await supabase.from('capstone_proposals').insert({

@@ -17,6 +17,7 @@ import Evaluations from "./pages/Evaluations";
 import Meetings from "./pages/Meetings";
 import Resources from "./pages/Resources";
 import Setup from "./pages/Setup";
+import SelectContext from "./pages/SelectContext";
 import Settings from "./pages/Settings";
 import EvaluationCriteria from "./pages/EvaluationCriteria";
 import SubmitFeedback from "./pages/SubmitFeedback";
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/setup" element={<Setup />} />
+            <Route path="/select-context" element={<SelectContext />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/students" element={<ProtectedRoute allowedRoles={['supervisor']}><Students /></ProtectedRoute>} />
             <Route path="/tracks" element={<ProtectedRoute allowedRoles={['supervisor']}><Tracks /></ProtectedRoute>} />
