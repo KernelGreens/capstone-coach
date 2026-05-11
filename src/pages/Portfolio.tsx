@@ -12,7 +12,7 @@ import { Eye, Edit, Share2, Download } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 export default function Portfolio() {
-  const { user, userRole, loading: authLoading } = useAuth();
+  const { user, userRole, activeStudentId, loading: authLoading } = useAuth();
   const [searchParams] = useSearchParams();
   const shareToken = searchParams.get('token');
   const studentIdParam = searchParams.get('student');
