@@ -150,7 +150,9 @@ export default function CapstoneProject() {
 
   async function handleCreateProposal() {
     if (!user) return;
-    const { data: student } = await supabase.from('students').select('id').eq('user_id', user.id).single();
+    let sq = supabase.from('students').select('id');
+    sq = activeStudentId ? sq.eq('id', activeStudentId) : sq.eq('user_id', user.id);
+    const { data: student } = await sq.maybeSingle();
     if (!student) { toast({ title: 'Error', description: 'Student record not found', variant: 'destructive' }); return; }
 
     const { error } = await supabase.from('capstone_proposals').insert({
