@@ -180,11 +180,9 @@ export function OfficeHoursTab() {
     if (!selectedSlot || !selectedDate || !selectedTime || !user) return;
     setSaving(true);
 
-    const { data: myStudent } = await supabase
-      .from('students')
-      .select('id')
-      .eq('user_id', user.id)
-      .maybeSingle();
+    let sq = supabase.from('students').select('id');
+    sq = activeStudentId ? sq.eq('id', activeStudentId) : sq.eq('user_id', user.id);
+    const { data: myStudent } = await sq.maybeSingle();
 
     if (!myStudent) {
       toast({ title: 'Error', description: 'Student record not found', variant: 'destructive' });
