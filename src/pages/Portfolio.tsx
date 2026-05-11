@@ -69,12 +69,10 @@ export default function Portfolio() {
           .single();
         setPortfolio(p);
       } else if (user && userRole === 'student') {
-        // Student viewing own portfolio
-        const { data: s } = await supabase
-          .from('students')
-          .select('*, profiles:user_id(*)')
-          .eq('user_id', user.id)
-          .single();
+        // Student viewing own portfolio (scoped to active membership)
+        let sq = supabase.from('students').select('*, profiles:user_id(*)');
+        sq = activeStudentId ? sq.eq('id', activeStudentId) : sq.eq('user_id', user.id);
+        const { data: s } = await sq.maybeSingle();
         if (s) {
           setStudent(s);
           setProfile((s as any).profiles);
