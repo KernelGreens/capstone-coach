@@ -27,7 +27,7 @@ interface QuizPlayerProps {
 }
 
 export function QuizPlayer({ quizId, onClose }: QuizPlayerProps) {
-  const { user } = useAuth();
+  const { user, activeStudentId } = useAuth();
   const [quiz, setQuiz] = useState<any>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [current, setCurrent] = useState(0);
