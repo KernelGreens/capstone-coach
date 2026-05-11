@@ -80,7 +80,7 @@ const statusConfig: Record<string, { variant: 'default' | 'secondary' | 'destruc
 };
 
 export default function CapstoneProject() {
-  const { user, userRole } = useAuth();
+  const { user, userRole, activeStudentId } = useAuth();
   const isSupervisor = userRole === 'supervisor';
 
   const [loading, setLoading] = useState(true);
