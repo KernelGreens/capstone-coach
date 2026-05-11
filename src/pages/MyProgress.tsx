@@ -10,7 +10,7 @@ import { StudentWeekView } from '@/components/progress/StudentWeekView';
 import { TrendingUp, Target, Award, GraduationCap } from 'lucide-react';
 
 export default function MyProgress() {
-  const { user } = useAuth();
+  const { user, activeStudentId } = useAuth();
   const [student, setStudent] = useState<any>(null);
   const [track, setTrack] = useState<any>(null);
   const [weeklyProgress, setWeeklyProgress] = useState<any[]>([]);
@@ -22,17 +22,17 @@ export default function MyProgress() {
     if (user) {
       fetchData();
     }
-  }, [user]);
+  }, [user, activeStudentId]);
 
   const fetchData = async () => {
     setLoading(true);
     
-    // Fetch student data with track
-    const { data: studentData } = await supabase
-      .from('students')
-      .select('*, tracks(*)')
-      .eq('user_id', user?.id)
-      .single();
+    // Fetch student data with track (scoped to active student/supervisor)
+    let query = supabase.from('students').select('*, tracks(*)');
+    query = activeStudentId
+      ? query.eq('id', activeStudentId)
+      : query.eq('user_id', user?.id);
+    const { data: studentData } = await query.maybeSingle();
 
     if (studentData) {
       setStudent(studentData);
