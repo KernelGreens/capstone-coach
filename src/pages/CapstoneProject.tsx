@@ -107,6 +107,9 @@ export default function CapstoneProject() {
     setLoading(true);
     try {
       let query = supabase.from('capstone_proposals').select('*');
+      if (userRole === 'student' && activeStudentId) {
+        query = query.eq('student_id', activeStudentId);
+      }
       const { data, error } = await query.order('created_at', { ascending: false });
       if (error) throw error;
 
