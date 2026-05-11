@@ -40,7 +40,7 @@ interface Booking {
 }
 
 export function OfficeHoursTab() {
-  const { user, userRole } = useAuth();
+  const { user, userRole, activeStudentId } = useAuth();
   const { toast } = useToast();
   const [officeHours, setOfficeHours] = useState<OfficeHour[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
