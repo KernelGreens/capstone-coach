@@ -86,26 +86,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('user_id', userId);
       if (rolesErr) throw rolesErr;
 
-      const roles = Array.from(
-        new Set((rolesData ?? []).map((r: any) => r.role))
-      ) as ('supervisor' | 'student')[];
-      setAvailableRoles(roles);
+      const roles = new Set<'supervisor' | 'student'>(
+        (rolesData ?? []).map((r: any) => r.role)
+      );
 
-      // Fetch student memberships (each = one supervisor)
-      let memberships: StudentMembership[] = [];
-      if (roles.includes('student')) {
-        const { data: studentRows } = await supabase
-          .from('students')
-          .select('id, supervisor_id, track_id, tracks(name), profiles:supervisor_id(full_name)')
-          .eq('user_id', userId);
-        memberships = (studentRows ?? []).map((s: any) => ({
-          studentId: s.id,
-          supervisorId: s.supervisor_id,
-          supervisorName: s.profiles?.full_name || 'Supervisor',
-          trackId: s.track_id ?? null,
-          trackName: s.tracks?.name ?? null,
-        }));
+      // Always check student memberships — a user may be linked via students.user_id
+      // even if no user_roles row exists yet (e.g. invited students before role backfill).
+      const { data: studentRows } = await supabase
+        .from('students')
+        .select('id, supervisor_id, track_id, tracks(name), profiles:supervisor_id(full_name)')
+        .eq('user_id', userId);
+
+      const memberships: StudentMembership[] = (studentRows ?? []).map((s: any) => ({
+        studentId: s.id,
+        supervisorId: s.supervisor_id,
+        supervisorName: s.profiles?.full_name || 'Supervisor',
+        trackId: s.track_id ?? null,
+        trackName: s.tracks?.name ?? null,
+      }));
+
+      if (memberships.length > 0 && !roles.has('student')) {
+        roles.add('student');
+        // Backfill user_roles so RLS policies that check has_role() keep working.
+        supabase
+          .from('user_roles')
+          .insert({ user_id: userId, role: 'student' })
+          .then(({ error }) => {
+            if (error && !String(error.message).toLowerCase().includes('duplicate')) {
+              console.warn('Could not backfill student role:', error.message);
+            }
+          });
       }
+
+      const rolesArr = Array.from(roles) as ('supervisor' | 'student')[];
+      setAvailableRoles(rolesArr);
       setStudentMemberships(memberships);
 
       // Restore prior selection from sessionStorage
