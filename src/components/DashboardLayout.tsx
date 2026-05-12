@@ -25,7 +25,8 @@ import {
   Store,
   Crown,
   Sparkles,
-  Brain
+  Brain,
+  Repeat
 } from 'lucide-react';
 import { useUnreadMessageCount } from '@/hooks/use-unread-count';
 import { NotificationBell } from './NotificationBell';
@@ -39,7 +40,7 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { user, userRole, signOut } = useAuth();
+  const { user, userRole, signOut, availableRoles, studentMemberships, clearActiveContext } = useAuth();
   const location = useLocation();
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -131,6 +132,25 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             Settings
           </Button>
         </Link>
+        <Link to="/settings" onClick={() => setMobileOpen(false)}>
+          <Button variant="ghost" className="w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent/50">
+            <Settings className="h-5 w-5" />
+            Settings
+          </Button>
+        </Link>
+        {(availableRoles.length > 1 || studentMemberships.length > 1) && (
+          <Button
+            variant="ghost"
+            onClick={() => {
+              clearActiveContext();
+              setMobileOpen(false);
+            }}
+            className="w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent/50"
+          >
+            <Repeat className="h-5 w-5" />
+            Switch role/supervisor
+          </Button>
+        )}
         <Button
           variant="ghost"
           onClick={signOut}
