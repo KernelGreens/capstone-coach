@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +17,7 @@ export default function SelectContext() {
     setActiveContext,
   } = useAuth();
   const navigate = useNavigate();
+  const [pickingStudent, setPickingStudent] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) navigate('/auth', { replace: true });
@@ -38,10 +39,12 @@ export default function SelectContext() {
   }
 
   const hasMultipleRoles = availableRoles.length > 1;
-  const showRoleStep = hasMultipleRoles && !userRole;
+  const showRoleStep = hasMultipleRoles && !userRole && !pickingStudent;
   const showSupervisorStep =
     !showRoleStep &&
-    (userRole === 'student' || (!userRole && availableRoles.length === 1 && availableRoles[0] === 'student')) &&
+    (pickingStudent ||
+      userRole === 'student' ||
+      (!userRole && availableRoles.length === 1 && availableRoles[0] === 'student')) &&
     studentMemberships.length > 1 &&
     !activeStudentId;
 
@@ -77,9 +80,8 @@ export default function SelectContext() {
                   onClick={() => {
                     if (studentMemberships.length === 1) {
                       setActiveContext('student', studentMemberships[0].studentId);
-                    } else {
-                      setActiveContext('student', null);
-                      // stays on this page; supervisor step will render
+                    } else if (studentMemberships.length > 1) {
+                      setPickingStudent(true);
                     }
                   }}
                   className="flex w-full items-center gap-3 rounded-lg border p-4 text-left hover:bg-accent transition"
@@ -119,11 +121,7 @@ export default function SelectContext() {
                 <Button
                   variant="ghost"
                   className="w-full"
-                  onClick={() => {
-                    sessionStorage.removeItem('imp.activeRole');
-                    sessionStorage.removeItem('imp.activeStudentId');
-                    window.location.reload();
-                  }}
+                  onClick={() => setPickingStudent(false)}
                 >
                   Back to role selection
                 </Button>
