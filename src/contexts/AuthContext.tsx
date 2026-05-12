@@ -130,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         roleChoice: 'supervisor' | 'student' | null,
         studentChoice: string | null
       ) => {
-        if (!roleChoice || !roles.includes(roleChoice)) return null;
+        if (!roleChoice || !rolesArr.includes(roleChoice)) return null;
         if (roleChoice === 'supervisor') {
           return { role: 'supervisor' as const, studentId: null, supervisorId: null };
         }
@@ -150,10 +150,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       let resolved = resolveContext(storedRole, storedStudent);
       // 2) auto-resolve when only one option
       if (!resolved) {
-        if (roles.length === 0) {
+        if (rolesArr.length === 0) {
           resolved = null;
-        } else if (roles.length === 1) {
-          if (roles[0] === 'supervisor') {
+        } else if (rolesArr.length === 1) {
+          if (rolesArr[0] === 'supervisor') {
             resolved = { role: 'supervisor', studentId: null, supervisorId: null };
           } else if (memberships.length === 1) {
             resolved = {
@@ -172,7 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setNeedsContextSelection(false);
         sessionStorage.setItem(SS_ROLE, resolved.role);
         if (resolved.studentId) sessionStorage.setItem(SS_STUDENT, resolved.studentId);
-      } else if (roles.length === 0) {
+      } else if (rolesArr.length === 0) {
         setUserRole(null);
         setNeedsContextSelection(false);
       } else {
