@@ -92,15 +92,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Always check student memberships — a user may be linked via students.user_id
       // even if no user_roles row exists yet (e.g. invited students before role backfill).
-      const { data: studentRows } = await supabase
+      const { data: studentRows, error: studentsErr } = await supabase
         .from('students')
-        .select('id, supervisor_id, track_id, tracks(name), profiles:supervisor_id(full_name)')
+        .select('id, supervisor_id, track_id, tracks(name)')
         .eq('user_id', userId);
+      if (studentsErr) console.warn('students fetch error:', studentsErr.message);
+
+      // Fetch supervisor names separately (no FK between students.supervisor_id and profiles)
+      const supervisorIds = Array.from(
+        new Set((studentRows ?? []).map((s: any) => s.supervisor_id).filter(Boolean))
+      );
+      let supervisorMap = new Map<string, string>();
+      if (supervisorIds.length > 0) {
+        const { data: supProfiles } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', supervisorIds);
+        supervisorMap = new Map((supProfiles ?? []).map((p: any) => [p.id, p.full_name]));
+      }
 
       const memberships: StudentMembership[] = (studentRows ?? []).map((s: any) => ({
         studentId: s.id,
         supervisorId: s.supervisor_id,
-        supervisorName: s.profiles?.full_name || 'Supervisor',
+        supervisorName: supervisorMap.get(s.supervisor_id) || 'Supervisor',
         trackId: s.track_id ?? null,
         trackName: s.tracks?.name ?? null,
       }));
