@@ -86,26 +86,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('user_id', userId);
       if (rolesErr) throw rolesErr;
 
-      const roles = Array.from(
-        new Set((rolesData ?? []).map((r: any) => r.role))
-      ) as ('supervisor' | 'student')[];
-      setAvailableRoles(roles);
+      const roles = new Set<'supervisor' | 'student'>(
+        (rolesData ?? []).map((r: any) => r.role)
+      );
 
-      // Fetch student memberships (each = one supervisor)
-      let memberships: StudentMembership[] = [];
-      if (roles.includes('student')) {
-        const { data: studentRows } = await supabase
-          .from('students')
-          .select('id, supervisor_id, track_id, tracks(name), profiles:supervisor_id(full_name)')
-          .eq('user_id', userId);
-        memberships = (studentRows ?? []).map((s: any) => ({
-          studentId: s.id,
-          supervisorId: s.supervisor_id,
-          supervisorName: s.profiles?.full_name || 'Supervisor',
-          trackId: s.track_id ?? null,
-          trackName: s.tracks?.name ?? null,
-        }));
+      // Always check student memberships — a user may be linked via students.user_id
+      // even if no user_roles row exists yet (e.g. invited students before role backfill).
+      const { data: studentRows } = await supabase
+        .from('students')
+        .select('id, supervisor_id, track_id, tracks(name), profiles:supervisor_id(full_name)')
+        .eq('user_id', userId);
+
+      const memberships: StudentMembership[] = (studentRows ?? []).map((s: any) => ({
+        studentId: s.id,
+        supervisorId: s.supervisor_id,
+        supervisorName: s.profiles?.full_name || 'Supervisor',
+        trackId: s.track_id ?? null,
+        trackName: s.tracks?.name ?? null,
+      }));
+
+      if (memberships.length > 0 && !roles.has('student')) {
+        roles.add('student');
+        // Backfill user_roles so RLS policies that check has_role() keep working.
+        supabase
+          .from('user_roles')
+          .insert({ user_id: userId, role: 'student' })
+          .then(({ error }) => {
+            if (error && !String(error.message).toLowerCase().includes('duplicate')) {
+              console.warn('Could not backfill student role:', error.message);
+            }
+          });
       }
+
+      const rolesArr = Array.from(roles) as ('supervisor' | 'student')[];
+      setAvailableRoles(rolesArr);
       setStudentMemberships(memberships);
 
       // Restore prior selection from sessionStorage
@@ -116,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         roleChoice: 'supervisor' | 'student' | null,
         studentChoice: string | null
       ) => {
-        if (!roleChoice || !roles.includes(roleChoice)) return null;
+        if (!roleChoice || !rolesArr.includes(roleChoice)) return null;
         if (roleChoice === 'supervisor') {
           return { role: 'supervisor' as const, studentId: null, supervisorId: null };
         }
@@ -136,10 +150,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       let resolved = resolveContext(storedRole, storedStudent);
       // 2) auto-resolve when only one option
       if (!resolved) {
-        if (roles.length === 0) {
+        if (rolesArr.length === 0) {
           resolved = null;
-        } else if (roles.length === 1) {
-          if (roles[0] === 'supervisor') {
+        } else if (rolesArr.length === 1) {
+          if (rolesArr[0] === 'supervisor') {
             resolved = { role: 'supervisor', studentId: null, supervisorId: null };
           } else if (memberships.length === 1) {
             resolved = {
@@ -158,7 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setNeedsContextSelection(false);
         sessionStorage.setItem(SS_ROLE, resolved.role);
         if (resolved.studentId) sessionStorage.setItem(SS_STUDENT, resolved.studentId);
-      } else if (roles.length === 0) {
+      } else if (rolesArr.length === 0) {
         setUserRole(null);
         setNeedsContextSelection(false);
       } else {
