@@ -107,19 +107,32 @@ All colors MUST be HSL.
 }
 
 @media print {
-  /* Hide sidebar, buttons, dialogs, and non-content elements */
+  /* Hide sidebar, nav, buttons, dialogs, and non-content elements */
   aside,
-  .print\\:hidden,
+  nav,
+  header,
+  .print\:hidden,
   button,
   [role="dialog"],
-  [role="tablist"] {
+  [role="tablist"],
+  [data-radix-popper-content-wrapper] {
     display: none !important;
   }
 
+  /* Neutralise any fixed/sticky positioning that would overlay content */
+  .fixed, .sticky {
+    position: static !important;
+  }
+
   /* Reset layout so content fills the page */
-  main {
+  html, body, #root, main, div {
     margin-left: 0 !important;
+  }
+  main {
+    margin: 0 !important;
     padding: 1rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   /* Ensure cards don't break across pages */
