@@ -106,6 +106,11 @@ All colors MUST be HSL.
   }
 }
 
+@page {
+  margin: 0.5in;
+  size: auto;
+}
+
 @media print {
   /* Hide sidebar, nav, buttons, dialogs, and non-content elements */
   aside,
@@ -117,22 +122,31 @@ All colors MUST be HSL.
   [role="tablist"],
   [data-radix-popper-content-wrapper] {
     display: none !important;
+    visibility: hidden !important;
   }
 
   /* Neutralise any fixed/sticky positioning that would overlay content */
-  .fixed, .sticky {
+  .fixed, .sticky, [class*="fixed"] {
     position: static !important;
   }
 
-  /* Reset layout so content fills the page */
-  html, body, #root, main, div {
+  /* Reset layout so content fills the page — kill all left margins/paddings on layout containers */
+  html, body, #root {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+  [class*="ml-"], [class*="pl-"] {
     margin-left: 0 !important;
+    padding-left: 0 !important;
   }
   main {
     margin: 0 !important;
-    padding: 1rem !important;
+    padding: 0.25rem !important;
     width: 100% !important;
     max-width: 100% !important;
+    flex: none !important;
+    display: block !important;
   }
 
   /* Ensure cards don't break across pages */
