@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public._debug_lookup_user(text);
