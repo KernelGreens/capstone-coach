@@ -173,7 +173,7 @@ export function CurriculumGeneratorDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden !flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
@@ -251,7 +251,7 @@ export function CurriculumGeneratorDialog({
               </div>
             </div>
 
-            <ScrollArea className="flex-1 pr-4">
+            <ScrollArea className="flex-1 min-h-0 max-h-[65vh] pr-4">
               <div className="space-y-3 pb-4">
                 {curriculum.map((week) => (
                   <Card key={week.week_number} className="overflow-hidden">
