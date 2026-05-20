@@ -251,7 +251,7 @@ export function CurriculumGeneratorDialog({
               </div>
             </div>
 
-            <ScrollArea className="flex-1 pr-4">
+            <ScrollArea className="flex-1 min-h-0 max-h-[65vh] pr-4">
               <div className="space-y-3 pb-4">
                 {curriculum.map((week) => (
                   <Card key={week.week_number} className="overflow-hidden">
