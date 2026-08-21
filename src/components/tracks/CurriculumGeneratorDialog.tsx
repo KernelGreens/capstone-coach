@@ -225,8 +225,8 @@ export function CurriculumGeneratorDialog({
             </Button>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col min-h-0">
-            <div className="flex items-center justify-between mb-4">
+          <div className="flex-1 min-h-0 overflow-hidden flex flex-col px-6 pb-6">
+            <div className="flex items-center justify-between mb-4 shrink-0">
               <p className="text-sm text-muted-foreground">
                 Review and edit the generated curriculum. Click on a week to expand/collapse.
               </p>
@@ -251,7 +251,7 @@ export function CurriculumGeneratorDialog({
               </div>
             </div>
 
-            <ScrollArea className="flex-1 min-h-0 max-h-[65vh] pr-4">
+            <ScrollArea className="flex-1 min-h-0 pr-4">
               <div className="space-y-3 pb-4">
                 {curriculum.map((week) => (
                   <Card key={week.week_number} className="overflow-hidden">
