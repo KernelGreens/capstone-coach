@@ -185,7 +185,7 @@ export function CurriculumGeneratorDialog({
         </DialogHeader>
 
         {curriculum.length === 0 ? (
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 px-6 py-4 pb-6 overflow-y-auto">
             <div>
               <Label>Internship Duration (weeks) *</Label>
               <Input
