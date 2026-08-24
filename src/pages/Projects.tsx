@@ -55,15 +55,23 @@ export default function Projects() {
 
   const fetchData = async () => {
     setLoading(true);
-    const [projectsRes, tracksRes] = await Promise.all([
+    const [projectsRes, tracksRes, lessonsRes] = await Promise.all([
       supabase.from('projects').select('*, tracks(name)').order('week_number', { ascending: true }),
       supabase.from('tracks').select('*'),
+      supabase.from('lessons').select('id, project_id, title, description, lesson_type, external_url, display_order').order('display_order', { ascending: true }),
     ]);
 
     setProjects(projectsRes.data || []);
     setTracks(tracksRes.data || []);
+
+    const grouped: Record<string, any[]> = {};
+    (lessonsRes.data || []).forEach((l: any) => {
+      (grouped[l.project_id] ||= []).push(l);
+    });
+    setLessonsByProject(grouped);
     setLoading(false);
   };
+
 
   const handleSubmit = async () => {
     if (!formData.title || !formData.track_id) {
