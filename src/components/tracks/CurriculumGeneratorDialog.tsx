@@ -250,6 +250,46 @@ export function CurriculumGeneratorDialog({
                 rows={3}
               />
             </div>
+            <div className="space-y-2 rounded-lg border p-3">
+              <Label className="flex items-center gap-2">
+                <Upload className="h-4 w-4" />
+                Existing Outline (optional)
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Upload a PDF, TXT, MD or CSV outline — the AI will expand it instead of inventing its own structure. You can also paste it below.
+              </p>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="file"
+                  accept=".pdf,.txt,.md,.csv,text/plain,application/pdf"
+                  onChange={(e) => handleOutlineUpload(e.target.files?.[0])}
+                  className="cursor-pointer"
+                />
+                {outlineFileName && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setOutlineFile(null);
+                      setOutlineFileName('');
+                      setOutlineText('');
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              {outlineFileName && (
+                <p className="text-xs text-primary">Loaded: {outlineFileName}</p>
+              )}
+              <Textarea
+                value={outlineText}
+                onChange={(e) => setOutlineText(e.target.value)}
+                placeholder="Or paste your outline here (one topic per week)..."
+                rows={4}
+              />
+            </div>
+
             <Button
               onClick={generateCurriculum}
               disabled={generating}
