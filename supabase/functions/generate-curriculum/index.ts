@@ -60,6 +60,19 @@ Return the curriculum as a JSON array with this structure:
 
 Only return valid JSON, no additional text.`;
 
+    const userContent: any = outlineFile?.data
+      ? [
+          { type: "text", text: userPrompt },
+          {
+            type: "file",
+            file: {
+              filename: outlineFile.name || "outline.pdf",
+              file_data: `data:${outlineFile.mimeType || "application/pdf"};base64,${outlineFile.data}`,
+            },
+          },
+        ]
+      : userPrompt;
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -70,10 +83,11 @@ Only return valid JSON, no additional text.`;
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
+          { role: "user", content: userContent }
         ],
       }),
     });
+
 
     if (!response.ok) {
       const errorText = await response.text();
