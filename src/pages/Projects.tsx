@@ -24,6 +24,8 @@ import { SortableProjectCard } from '@/components/projects/SortableProjectCard';
 
 export default function Projects() {
   const [projects, setProjects] = useState<any[]>([]);
+  const [lessonsByProject, setLessonsByProject] = useState<Record<string, any[]>>({});
+
   const [tracks, setTracks] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
