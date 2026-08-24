@@ -21,9 +21,13 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableProjectCard } from '@/components/projects/SortableProjectCard';
+import { CurriculumPrintView } from '@/components/projects/CurriculumPrintView';
+
 
 export default function Projects() {
   const [projects, setProjects] = useState<any[]>([]);
+  const [lessonsByProject, setLessonsByProject] = useState<Record<string, any[]>>({});
+
   const [tracks, setTracks] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -55,15 +59,23 @@ export default function Projects() {
 
   const fetchData = async () => {
     setLoading(true);
-    const [projectsRes, tracksRes] = await Promise.all([
+    const [projectsRes, tracksRes, lessonsRes] = await Promise.all([
       supabase.from('projects').select('*, tracks(name)').order('week_number', { ascending: true }),
       supabase.from('tracks').select('*'),
+      supabase.from('lessons').select('id, project_id, title, description, lesson_type, external_url, display_order').order('display_order', { ascending: true }),
     ]);
 
     setProjects(projectsRes.data || []);
     setTracks(tracksRes.data || []);
+
+    const grouped: Record<string, any[]> = {};
+    (lessonsRes.data || []).forEach((l: any) => {
+      (grouped[l.project_id] ||= []).push(l);
+    });
+    setLessonsByProject(grouped);
     setLoading(false);
   };
+
 
   const handleSubmit = async () => {
     if (!formData.title || !formData.track_id) {
@@ -281,7 +293,13 @@ export default function Projects() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <CurriculumPrintView
+        projects={filteredProjects}
+        lessonsByProject={lessonsByProject}
+        trackName={selectedTrack === 'all' ? 'All Tracks' : tracks.find(t => t.id === selectedTrack)?.name || ''}
+      />
+      <div className="space-y-6 print:hidden">
+
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 print:hidden" id="projects-header">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">Curricula Management</h1>

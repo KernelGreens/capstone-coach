@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Sparkles, Check, Edit2, Save, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, Sparkles, Check, Edit2, Save, X, ChevronDown, ChevronUp, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -39,12 +39,53 @@ export function CurriculumGeneratorDialog({
 }: CurriculumGeneratorDialogProps) {
   const [weeks, setWeeks] = useState('8');
   const [focusAreas, setFocusAreas] = useState('');
+  const [outlineText, setOutlineText] = useState('');
+  const [outlineFile, setOutlineFile] = useState<{ name: string; mimeType: string; data: string } | null>(null);
+  const [outlineFileName, setOutlineFileName] = useState('');
+
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [curriculum, setCurriculum] = useState<CurriculumWeek[]>([]);
   const [editingWeek, setEditingWeek] = useState<number | null>(null);
   const [expandedWeeks, setExpandedWeeks] = useState<Set<number>>(new Set());
   const { toast } = useToast();
+
+  const handleOutlineUpload = async (file: File | undefined) => {
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ variant: 'destructive', title: 'File too large', description: 'Please upload a file under 10MB' });
+      return;
+    }
+    const isText = /\.(txt|md|csv)$/i.test(file.name) || file.type.startsWith('text/');
+    const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+
+    if (isText) {
+      const text = await file.text();
+      setOutlineText(text);
+      setOutlineFile(null);
+      setOutlineFileName(file.name);
+      toast({ title: 'Outline loaded', description: `${file.name} will guide the generation` });
+      return;
+    }
+
+    if (isPdf) {
+      const buf = new Uint8Array(await file.arrayBuffer());
+      let binary = '';
+      for (let i = 0; i < buf.length; i++) binary += String.fromCharCode(buf[i]);
+      setOutlineFile({ name: file.name, mimeType: 'application/pdf', data: btoa(binary) });
+      setOutlineFileName(file.name);
+      toast({ title: 'Outline loaded', description: `${file.name} will guide the generation` });
+      return;
+    }
+
+    toast({
+      variant: 'destructive',
+      title: 'Unsupported file',
+      description: 'Upload a .pdf, .txt, .md or .csv file, or paste the outline text instead.',
+    });
+  };
+
+
 
   const generateCurriculum = async () => {
     const weekCount = parseInt(weeks);
@@ -74,6 +115,9 @@ export function CurriculumGeneratorDialog({
             trackDescription,
             internshipWeeks: weekCount,
             focusAreas,
+            outlineText: outlineText.trim() || undefined,
+            outlineFile: outlineFile || undefined,
+
           }),
         }
       );
@@ -168,6 +212,9 @@ export function CurriculumGeneratorDialog({
     setCurriculum([]);
     setEditingWeek(null);
     setExpandedWeeks(new Set());
+    setOutlineText('');
+    setOutlineFile(null);
+    setOutlineFileName('');
     onOpenChange(false);
   };
 
@@ -206,6 +253,46 @@ export function CurriculumGeneratorDialog({
                 rows={3}
               />
             </div>
+            <div className="space-y-2 rounded-lg border p-3">
+              <Label className="flex items-center gap-2">
+                <Upload className="h-4 w-4" />
+                Existing Outline (optional)
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Upload a PDF, TXT, MD or CSV outline — the AI will expand it instead of inventing its own structure. You can also paste it below.
+              </p>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="file"
+                  accept=".pdf,.txt,.md,.csv,text/plain,application/pdf"
+                  onChange={(e) => handleOutlineUpload(e.target.files?.[0])}
+                  className="cursor-pointer"
+                />
+                {outlineFileName && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setOutlineFile(null);
+                      setOutlineFileName('');
+                      setOutlineText('');
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              {outlineFileName && (
+                <p className="text-xs text-primary">Loaded: {outlineFileName}</p>
+              )}
+              <Textarea
+                value={outlineText}
+                onChange={(e) => setOutlineText(e.target.value)}
+                placeholder="Or paste your outline here (one topic per week)..."
+                rows={4}
+              />
+            </div>
+
             <Button
               onClick={generateCurriculum}
               disabled={generating}
