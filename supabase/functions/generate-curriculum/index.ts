@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { trackName, trackDescription, internshipWeeks, focusAreas } = await req.json();
+    const { trackName, trackDescription, internshipWeeks, focusAreas, outlineText, outlineFile } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
