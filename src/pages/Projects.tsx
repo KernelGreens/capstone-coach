@@ -21,6 +21,8 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableProjectCard } from '@/components/projects/SortableProjectCard';
+import { CurriculumPrintView } from '@/components/projects/CurriculumPrintView';
+
 
 export default function Projects() {
   const [projects, setProjects] = useState<any[]>([]);
