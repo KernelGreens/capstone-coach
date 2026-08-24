@@ -50,6 +50,43 @@ export function CurriculumGeneratorDialog({
   const [expandedWeeks, setExpandedWeeks] = useState<Set<number>>(new Set());
   const { toast } = useToast();
 
+  const handleOutlineUpload = async (file: File | undefined) => {
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ variant: 'destructive', title: 'File too large', description: 'Please upload a file under 10MB' });
+      return;
+    }
+    const isText = /\.(txt|md|csv)$/i.test(file.name) || file.type.startsWith('text/');
+    const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+
+    if (isText) {
+      const text = await file.text();
+      setOutlineText(text);
+      setOutlineFile(null);
+      setOutlineFileName(file.name);
+      toast({ title: 'Outline loaded', description: `${file.name} will guide the generation` });
+      return;
+    }
+
+    if (isPdf) {
+      const buf = new Uint8Array(await file.arrayBuffer());
+      let binary = '';
+      for (let i = 0; i < buf.length; i++) binary += String.fromCharCode(buf[i]);
+      setOutlineFile({ name: file.name, mimeType: 'application/pdf', data: btoa(binary) });
+      setOutlineFileName(file.name);
+      toast({ title: 'Outline loaded', description: `${file.name} will guide the generation` });
+      return;
+    }
+
+    toast({
+      variant: 'destructive',
+      title: 'Unsupported file',
+      description: 'Upload a .pdf, .txt, .md or .csv file, or paste the outline text instead.',
+    });
+  };
+
+
+
   const generateCurriculum = async () => {
     const weekCount = parseInt(weeks);
     if (isNaN(weekCount) || weekCount < 1 || weekCount > 52) {
