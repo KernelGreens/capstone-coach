@@ -35,6 +35,9 @@ Guidelines:
 Track Name: ${trackName}
 Description: ${trackDescription || 'General internship program'}
 ${focusAreas ? `Focus Areas: ${focusAreas}` : ''}
+${outlineText ? `\nAn existing curriculum outline is provided below. Follow its structure, topics and ordering closely, expanding each item into a full week with objectives, tasks, deliverables and tools. Do not invent unrelated topics; only fill gaps if the outline has fewer items than the requested number of weeks.\n---OUTLINE START---\n${outlineText}\n---OUTLINE END---` : ''}
+${outlineFile ? `\nAn existing curriculum outline is attached as a file. Follow its structure, topics and ordering closely, expanding each item into a full week. Do not invent unrelated topics; only fill gaps if the outline has fewer items than the requested number of weeks.` : ''}
+
 
 For each week, provide:
 1. Week Focus (main topic/theme)
