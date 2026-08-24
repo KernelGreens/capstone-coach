@@ -78,6 +78,9 @@ export function CurriculumGeneratorDialog({
             trackDescription,
             internshipWeeks: weekCount,
             focusAreas,
+            outlineText: outlineText.trim() || undefined,
+            outlineFile: outlineFile || undefined,
+
           }),
         }
       );
