@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Sparkles, Check, Edit2, Save, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, Sparkles, Check, Edit2, Save, X, ChevronDown, ChevronUp, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -212,6 +212,9 @@ export function CurriculumGeneratorDialog({
     setCurriculum([]);
     setEditingWeek(null);
     setExpandedWeeks(new Set());
+    setOutlineText('');
+    setOutlineFile(null);
+    setOutlineFileName('');
     onOpenChange(false);
   };
 
