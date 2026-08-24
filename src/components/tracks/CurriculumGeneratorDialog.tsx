@@ -39,6 +39,10 @@ export function CurriculumGeneratorDialog({
 }: CurriculumGeneratorDialogProps) {
   const [weeks, setWeeks] = useState('8');
   const [focusAreas, setFocusAreas] = useState('');
+  const [outlineText, setOutlineText] = useState('');
+  const [outlineFile, setOutlineFile] = useState<{ name: string; mimeType: string; data: string } | null>(null);
+  const [outlineFileName, setOutlineFileName] = useState('');
+
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [curriculum, setCurriculum] = useState<CurriculumWeek[]>([]);
