@@ -281,7 +281,13 @@ export default function Projects() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <CurriculumPrintView
+        projects={filteredProjects}
+        lessonsByProject={lessonsByProject}
+        trackName={selectedTrack === 'all' ? 'All Tracks' : tracks.find(t => t.id === selectedTrack)?.name || ''}
+      />
+      <div className="space-y-6 print:hidden">
+
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 print:hidden" id="projects-header">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">Curricula Management</h1>
