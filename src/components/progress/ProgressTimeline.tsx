@@ -28,21 +28,30 @@ export function ProgressTimeline({ weeks, currentWeek, onWeekClick }: ProgressTi
           key={week.id}
           onClick={() => onWeekClick(week.week_number)}
           className={cn(
-            "flex flex-col items-center min-w-[60px] p-2 rounded-lg transition-all",
+            "flex flex-col items-center min-w-[60px] p-2 rounded-lg transition-all relative",
             currentWeek === week.week_number
               ? "bg-primary text-primary-foreground"
-              : "hover:bg-muted"
+              : "hover:bg-muted",
+            (week.extension_weeks || 0) > 0 && currentWeek !== week.week_number &&
+              "ring-1 ring-amber-500/50"
           )}
+          title={(week.extension_weeks || 0) > 0 ? `Extended by ${week.extension_weeks} week(s)` : undefined}
         >
-          <span className="text-xs font-medium">W{week.week_number}</span>
+          <span className="text-xs font-medium">
+            W{week.week_number}
+            {(week.extension_weeks || 0) > 0 && '+'}
+          </span>
           <div className={cn(
             "mt-1",
             currentWeek === week.week_number && "text-primary-foreground"
           )}>
-            {getStatusIcon(week.status)}
+            {(week.extension_weeks || 0) > 0
+              ? <CalendarClock className="h-4 w-4 text-amber-500" />
+              : getStatusIcon(week.status)}
           </div>
         </button>
       ))}
+
     </div>
   );
 }
