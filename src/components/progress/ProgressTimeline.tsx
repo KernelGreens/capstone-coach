@@ -1,4 +1,4 @@
-import { CheckCircle2, Circle, Clock, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, AlertCircle, CalendarClock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ProgressTimelineProps {
