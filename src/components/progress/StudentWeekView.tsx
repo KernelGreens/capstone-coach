@@ -18,6 +18,8 @@ import { CurriculumCard } from './CurriculumCard';
 import { TaskChecklist } from './TaskChecklist';
 import { DeliverablesSection } from './DeliverablesSection';
 import { validateFile } from '@/lib/fileValidation';
+import { ExtensionBanner } from './ExtensionBanner';
+
 
 interface StudentWeekViewProps {
   weekProgress: any;
