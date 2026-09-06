@@ -18,6 +18,8 @@ import { CurriculumCard } from './CurriculumCard';
 import { TaskChecklist } from './TaskChecklist';
 import { DeliverablesSection } from './DeliverablesSection';
 import { validateFile } from '@/lib/fileValidation';
+import { ExtensionBanner } from './ExtensionBanner';
+
 
 interface StudentWeekViewProps {
   weekProgress: any;
@@ -202,8 +204,13 @@ export function StudentWeekView({ weekProgress, project, student, onUpdate }: St
       {/* Week Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold flex items-center gap-3">
+          <h2 className="text-2xl font-bold flex items-center gap-3 flex-wrap">
             Week {weekProgress.week_number}
+            {(weekProgress.extension_weeks || 0) > 0 && (
+              <span className="text-base font-normal text-muted-foreground">
+                – {weekProgress.week_number + weekProgress.extension_weeks}
+              </span>
+            )}
             <Badge variant={statusConfig.variant} className="gap-1">
               <StatusIcon className="h-3 w-3" />
               {statusConfig.label}
@@ -222,6 +229,9 @@ export function StudentWeekView({ weekProgress, project, student, onUpdate }: St
           </div>
         )}
       </div>
+
+      <ExtensionBanner weekProgress={weekProgress} isStudentView />
+
 
       <Tabs defaultValue="curriculum" className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">

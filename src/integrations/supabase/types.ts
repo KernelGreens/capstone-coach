@@ -1813,6 +1813,11 @@ export type Database = {
         Row: {
           created_at: string
           deliverables_submitted: boolean | null
+          extended_at: string | null
+          extended_by: string | null
+          extension_reason: string | null
+          extension_shifted_schedule: boolean
+          extension_weeks: number
           id: string
           learning_hours: number | null
           project_id: string | null
@@ -1832,6 +1837,11 @@ export type Database = {
         Insert: {
           created_at?: string
           deliverables_submitted?: boolean | null
+          extended_at?: string | null
+          extended_by?: string | null
+          extension_reason?: string | null
+          extension_shifted_schedule?: boolean
+          extension_weeks?: number
           id?: string
           learning_hours?: number | null
           project_id?: string | null
@@ -1851,6 +1861,11 @@ export type Database = {
         Update: {
           created_at?: string
           deliverables_submitted?: boolean | null
+          extended_at?: string | null
+          extended_by?: string | null
+          extension_reason?: string | null
+          extension_shifted_schedule?: boolean
+          extension_weeks?: number
           id?: string
           learning_hours?: number | null
           project_id?: string | null
