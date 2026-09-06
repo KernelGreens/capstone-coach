@@ -238,21 +238,42 @@ export function WeekProgressCard({ weekProgress, student, isStudentView, onUpdat
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3">
             <div className="rounded-full bg-primary/10 p-2">
               <FileText className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-lg">Week {weekProgress.week_number}</CardTitle>
+              <CardTitle className="text-lg">
+                Week {weekProgress.week_number}
+                {(weekProgress.extension_weeks || 0) > 0 && (
+                  <span className="text-sm font-normal text-muted-foreground">
+                    {' '}– {weekProgress.week_number + weekProgress.extension_weeks}
+                  </span>
+                )}
+              </CardTitle>
               <p className="text-sm text-muted-foreground">{weekProgress.week_focus || 'No focus set'}</p>
             </div>
           </div>
-          {getStatusBadge(weekProgress.status)}
+          <div className="flex items-center gap-2">
+            {(weekProgress.extension_weeks || 0) > 0 && (
+              <Badge variant="outline" className="gap-1 border-amber-500/50 text-amber-600">
+                <CalendarClock className="h-3 w-3" />
+                Extended
+              </Badge>
+            )}
+            {getStatusBadge(weekProgress.status)}
+            {!isStudentView && (
+              <ExtendWeekDialog weekProgress={weekProgress} student={student} onUpdate={onUpdate} />
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        <ExtensionBanner weekProgress={weekProgress} isStudentView={isStudentView} />
+
         {weekProgress.tasks && (
+
           <div>
             <p className="text-sm font-medium">Tasks:</p>
             <p className="text-sm text-muted-foreground whitespace-pre-wrap">{weekProgress.tasks}</p>
