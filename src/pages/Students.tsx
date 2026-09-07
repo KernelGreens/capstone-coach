@@ -14,6 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MultiTrackManager } from '@/components/students/MultiTrackManager';
+import { BulkInviteDialog } from '@/components/students/BulkInviteDialog';
 
 export default function Students() {
   const [students, setStudents] = useState<any[]>([]);
