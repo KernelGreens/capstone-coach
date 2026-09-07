@@ -403,6 +403,7 @@ export default function Students() {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {/* Stats Cards */}
