@@ -325,6 +325,8 @@ export default function Students() {
             <h1 className="text-2xl sm:text-3xl font-bold">Students Management</h1>
             <p className="text-muted-foreground">Manage and monitor all interns</p>
           </div>
+          <div className="flex flex-wrap gap-2">
+          <BulkInviteDialog tracks={tracks} onCompleted={fetchData} />
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button>
