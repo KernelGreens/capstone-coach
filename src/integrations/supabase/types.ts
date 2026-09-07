@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_user_connections: {
+        Row: {
+          connection_key_ciphertext: string
+          connector_id: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          connection_key_ciphertext: string
+          connector_id: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          connection_key_ciphertext?: string
+          connector_id?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       assignment_submissions: {
         Row: {
           assignment_id: string
@@ -899,9 +926,12 @@ export type Database = {
       }
       meetings: {
         Row: {
+          calendar_sequence: number
+          calendar_uid: string | null
           created_at: string
           description: string | null
           duration_minutes: number
+          google_event_id: string | null
           id: string
           location: string | null
           meeting_link: string | null
@@ -914,9 +944,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          calendar_sequence?: number
+          calendar_uid?: string | null
           created_at?: string
           description?: string | null
           duration_minutes?: number
+          google_event_id?: string | null
           id?: string
           location?: string | null
           meeting_link?: string | null
@@ -929,9 +962,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          calendar_sequence?: number
+          calendar_uid?: string | null
           created_at?: string
           description?: string | null
           duration_minutes?: number
+          google_event_id?: string | null
           id?: string
           location?: string | null
           meeting_link?: string | null
