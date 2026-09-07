@@ -14,6 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MultiTrackManager } from '@/components/students/MultiTrackManager';
+import { BulkInviteDialog } from '@/components/students/BulkInviteDialog';
 
 export default function Students() {
   const [students, setStudents] = useState<any[]>([]);
@@ -324,6 +325,8 @@ export default function Students() {
             <h1 className="text-2xl sm:text-3xl font-bold">Students Management</h1>
             <p className="text-muted-foreground">Manage and monitor all interns</p>
           </div>
+          <div className="flex flex-wrap gap-2">
+          <BulkInviteDialog tracks={tracks} onCompleted={fetchData} />
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -400,6 +403,7 @@ export default function Students() {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {/* Stats Cards */}
