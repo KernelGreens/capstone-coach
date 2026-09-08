@@ -20,6 +20,7 @@ import {
   User,
   Presentation,
   ChevronDown,
+  Calendar as CalendarIcon,
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
@@ -154,6 +155,25 @@ export default function Meetings() {
     }
   };
 
+  const sendCalendarInvite = async (meetingIds: string[], action: 'create' | 'update' | 'cancel') => {
+    try {
+      const { data, error } = await supabase.functions.invoke('send-meeting-invite', {
+        body: { meeting_ids: meetingIds, action },
+      });
+      if (error) {
+        const details = error?.context?.text ? await error.context.text() : error.message;
+        console.warn('Calendar invite warning:', details);
+      } else if (data?.emailsSent) {
+        toast({
+          title: 'Calendar invite sent',
+          description: `${data.emailsSent} invite${data.emailsSent > 1 ? 's' : ''} emailed.`,
+        });
+      }
+    } catch (e: any) {
+      console.warn('Calendar invite failed:', e.message);
+    }
+  };
+
   const handleSave = async (formData: any) => {
     if (!user) return;
     setSaving(true);
@@ -173,6 +193,7 @@ export default function Meetings() {
 
         if (error) throw error;
 
+        await sendCalendarInvite([editingMeeting.id], 'update');
         toast({ title: 'Success', description: 'Meeting updated successfully' });
       } else {
         // Create meeting(s) for each selected student
@@ -184,8 +205,16 @@ export default function Meetings() {
           scheduled_at: new Date(formData.scheduled_at).toISOString(),
         }));
 
-        const { error } = await supabase.from('meetings').insert(meetingsToInsert);
+        const { data: inserted, error } = await supabase
+          .from('meetings')
+          .insert(meetingsToInsert)
+          .select('id');
         if (error) throw error;
+
+        await sendCalendarInvite(
+          (inserted ?? []).map((m) => m.id),
+          'create',
+        );
 
         toast({
           title: 'Success',
@@ -220,10 +249,12 @@ export default function Meetings() {
   const handleDeleteConfirm = async () => {
     if (!meetingToDelete) return;
 
-    const { error } = await supabase
-      .from('meetings')
-      .delete()
-      .eq('id', meetingToDelete.id);
+    const group = groupedMeetings.find((g) => g.meetings.some((m) => m.id === meetingToDelete.id));
+    const ids = group ? group.meetings.map((m) => m.id) : [meetingToDelete.id];
+
+    await sendCalendarInvite(ids, 'cancel');
+
+    const { error } = await supabase.from('meetings').delete().in('id', ids);
 
     if (error) {
       toast({ title: 'Error', description: 'Failed to delete meeting', variant: 'destructive' });
@@ -378,12 +409,31 @@ export default function Meetings() {
                 : 'View your scheduled meetings'}
             </p>
           </div>
-          {userRole === 'supervisor' && (
-            <Button onClick={() => setDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Schedule Meeting
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                const width = 500;
+                const height = 700;
+                const left = window.screenX + (window.outerWidth - width) / 2;
+                const top = window.screenY + (window.outerHeight - height) / 2;
+                window.open(
+                  `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/connect-google-calendar`,
+                  'ConnectGoogleCalendar',
+                  `width=${width},height=${height},top=${top},left=${left}`,
+                );
+              }}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              Connect Google Calendar
             </Button>
-          )}
+            {userRole === 'supervisor' && (
+              <Button onClick={() => setDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Schedule Meeting
+              </Button>
+            )}
+          </div>
         </div>
 
         {meetings.length === 0 ? (
