@@ -156,6 +156,25 @@ export default function Meetings() {
     }
   };
 
+  const sendCalendarInvite = async (meetingIds: string[], action: 'create' | 'update' | 'cancel') => {
+    try {
+      const { data, error } = await supabase.functions.invoke('send-meeting-invite', {
+        body: { meeting_ids: meetingIds, action },
+      });
+      if (error) {
+        const details = error?.context?.text ? await error.context.text() : error.message;
+        console.warn('Calendar invite warning:', details);
+      } else if (data?.emailsSent) {
+        toast({
+          title: 'Calendar invite sent',
+          description: `${data.emailsSent} invite${data.emailsSent > 1 ? 's' : ''} emailed.`,
+        });
+      }
+    } catch (e: any) {
+      console.warn('Calendar invite failed:', e.message);
+    }
+  };
+
   const handleSave = async (formData: any) => {
     if (!user) return;
     setSaving(true);
@@ -175,6 +194,7 @@ export default function Meetings() {
 
         if (error) throw error;
 
+        await sendCalendarInvite([editingMeeting.id], 'update');
         toast({ title: 'Success', description: 'Meeting updated successfully' });
       } else {
         // Create meeting(s) for each selected student
@@ -186,8 +206,16 @@ export default function Meetings() {
           scheduled_at: new Date(formData.scheduled_at).toISOString(),
         }));
 
-        const { error } = await supabase.from('meetings').insert(meetingsToInsert);
+        const { data: inserted, error } = await supabase
+          .from('meetings')
+          .insert(meetingsToInsert)
+          .select('id');
         if (error) throw error;
+
+        await sendCalendarInvite(
+          (inserted ?? []).map((m) => m.id),
+          'create',
+        );
 
         toast({
           title: 'Success',
