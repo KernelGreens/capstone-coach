@@ -29,3 +29,6 @@ verify_jwt = true
 
 [functions.google-calendar-sync]
 verify_jwt = true
+
+[functions.connect-google-calendar]
+verify_jwt = true
