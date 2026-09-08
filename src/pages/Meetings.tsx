@@ -410,12 +410,31 @@ export default function Meetings() {
                 : 'View your scheduled meetings'}
             </p>
           </div>
-          {userRole === 'supervisor' && (
-            <Button onClick={() => setDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Schedule Meeting
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                const width = 500;
+                const height = 700;
+                const left = window.screenX + (window.outerWidth - width) / 2;
+                const top = window.screenY + (window.outerHeight - height) / 2;
+                window.open(
+                  `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/connect-google-calendar`,
+                  'ConnectGoogleCalendar',
+                  `width=${width},height=${height},top=${top},left=${left}`,
+                );
+              }}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              Connect Google Calendar
             </Button>
-          )}
+            {userRole === 'supervisor' && (
+              <Button onClick={() => setDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Schedule Meeting
+              </Button>
+            )}
+          </div>
         </div>
 
         {meetings.length === 0 ? (
