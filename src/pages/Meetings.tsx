@@ -20,6 +20,8 @@ import {
   User,
   Presentation,
   ChevronDown,
+  Mail,
+  Calendar as CalendarIcon,
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
