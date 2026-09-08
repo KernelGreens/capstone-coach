@@ -250,10 +250,12 @@ export default function Meetings() {
   const handleDeleteConfirm = async () => {
     if (!meetingToDelete) return;
 
-    const { error } = await supabase
-      .from('meetings')
-      .delete()
-      .eq('id', meetingToDelete.id);
+    const group = groupedMeetings.find((g) => g.meetings.some((m) => m.id === meetingToDelete.id));
+    const ids = group ? group.meetings.map((m) => m.id) : [meetingToDelete.id];
+
+    await sendCalendarInvite(ids, 'cancel');
+
+    const { error } = await supabase.from('meetings').delete().in('id', ids);
 
     if (error) {
       toast({ title: 'Error', description: 'Failed to delete meeting', variant: 'destructive' });
