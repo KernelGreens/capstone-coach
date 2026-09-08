@@ -1,7 +1,9 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { getConnectionKeyForUser } from "../_shared/appUserConnections.ts";
 
 const GATEWAY_BASE_URL = "https://connector-gateway.lovable.dev";
+const CONNECTOR_ID = "google_calendar";
 
 function callAsAppUser(opts: {
   gatewayBaseUrl: string;
@@ -23,37 +25,6 @@ function callAsAppUser(opts: {
     },
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
-}
-
-async function getConnectionKey(admin: any, userId: string, connectorId: string) {
-  const { data, error } = await admin
-    .from("app_user_connections")
-    .select("connection_key_ciphertext")
-    .eq("user_id", userId)
-    .eq("connector_id", connectorId)
-    .maybeSingle();
-  if (error) throw error;
-  return data ? await decryptConnectionKey(data.connection_key_ciphertext) : null;
-}
-
-async function key(): Promise<CryptoKey> {
-  const raw = Deno.env.get("APP_USER_CONNECTION_KEY_SECRET");
-  if (!raw) throw new Error("APP_USER_CONNECTION_KEY_SECRET is not set");
-  return crypto.subtle.importKey(
-    "raw",
-    Uint8Array.from(atob(raw), (c) => c.charCodeAt(0)),
-    "AES-GCM",
-    false,
-    ["encrypt", "decrypt"],
-  );
-}
-
-async function decryptConnectionKey(stored: string): Promise<string> {
-  const buf = Uint8Array.from(atob(stored), (c) => c.charCodeAt(0));
-  const iv = buf.subarray(0, 12);
-  const ciphertext = buf.subarray(12);
-  const plaintext = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, await key(), ciphertext);
-  return new TextDecoder().decode(plaintext);
 }
 
 Deno.serve(async (req) => {
@@ -119,7 +90,7 @@ Deno.serve(async (req) => {
     const profileMap = new Map((profiles ?? []).map((p: any) => [p.id, p]));
 
     const syncForUser = async (userId: string, role: "organizer" | "attendee") => {
-      const connectionAPIKey = await getConnectionKey(admin, userId, "google_calendar");
+      const connectionAPIKey = await getConnectionKeyForUser(userId, CONNECTOR_ID);
       if (!connectionAPIKey) return false;
 
       const profile = profileMap.get(userId);
@@ -149,7 +120,7 @@ Deno.serve(async (req) => {
         if (existingEventId) {
           await callAsAppUser({
             gatewayBaseUrl: GATEWAY_BASE_URL,
-            connectorId: "google_calendar",
+            connectorId: CONNECTOR_ID,
             connectionAPIKey,
             path: `/calendars/primary/events/${existingEventId}`,
             method: "DELETE",
@@ -162,7 +133,7 @@ Deno.serve(async (req) => {
       if (existingEventId && action === "update") {
         response = await callAsAppUser({
           gatewayBaseUrl: GATEWAY_BASE_URL,
-          connectorId: "google_calendar",
+          connectorId: CONNECTOR_ID,
           connectionAPIKey,
           path: `/calendars/primary/events/${existingEventId}`,
           method: "PATCH",
@@ -171,7 +142,7 @@ Deno.serve(async (req) => {
       } else {
         response = await callAsAppUser({
           gatewayBaseUrl: GATEWAY_BASE_URL,
-          connectorId: "google_calendar",
+          connectorId: CONNECTOR_ID,
           connectionAPIKey,
           path: "/calendars/primary/events",
           method: "POST",
