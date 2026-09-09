@@ -233,21 +233,19 @@ serve(async (req) => {
       </html>
     `;
 
-    // Send email via Resend
+    // Send invitation email via Resend gateway
     console.log('Attempting to send email to:', email);
-    const { data: emailData, error: emailError } = await resend.emails.send({
-      from: `Internship Platform <${Deno.env.get('RESEND_FROM_EMAIL') || 'onboarding@resend.dev'}>`,
+    const emailResult = await sendEmailViaResend({
+      from: `Internship Platform <${fromEmail}>`,
       to: [email],
       subject: '🎓 Welcome to Internship Mentorship Platform',
       html: emailHtml,
     });
 
-    if (emailError) {
-      console.error('Email sending error:', JSON.stringify(emailError));
-      // Note: Resend's free tier with onboarding@resend.dev only sends to the verified email
-      // For production, a custom domain needs to be configured
+    if (emailResult.error) {
+      console.error('Email sending error:', emailResult.error);
     } else {
-      console.log('Email sent successfully:', emailData);
+      console.log('Email sent successfully:', emailResult.id);
     }
 
     console.log(`Student invited successfully: ${email}`);
@@ -256,8 +254,8 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         student: studentData,
-        emailSent: !emailError,
-        emailNote: emailError ? 'Email may not be delivered. Resend free tier only sends to verified emails.' : null
+        emailSent: !emailResult.error,
+        emailNote: emailResult.error ? `Email send failed: ${emailResult.error}` : null
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
