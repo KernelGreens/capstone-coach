@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
-import Resend from "https://esm.sh/resend@2.0.0";
+import { sendEmailViaResend, getResendFromEmail } from "../_shared/resendGateway.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,13 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const resendApiKey = Deno.env.get('RESEND_API_KEY');
-    if (!resendApiKey) {
-      console.error('RESEND_API_KEY is not configured');
-      throw new Error('Email service is not configured');
-    }
-    
-    const resend = new Resend.Resend(resendApiKey);
+    const fromEmail = getResendFromEmail();
     
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -239,21 +233,19 @@ serve(async (req) => {
       </html>
     `;
 
-    // Send email via Resend
+    // Send invitation email via Resend gateway
     console.log('Attempting to send email to:', email);
-    const { data: emailData, error: emailError } = await resend.emails.send({
-      from: `Internship Platform <${Deno.env.get('RESEND_FROM_EMAIL') || 'onboarding@resend.dev'}>`,
+    const emailResult = await sendEmailViaResend({
+      from: `Internship Platform <${fromEmail}>`,
       to: [email],
       subject: '🎓 Welcome to Internship Mentorship Platform',
       html: emailHtml,
     });
 
-    if (emailError) {
-      console.error('Email sending error:', JSON.stringify(emailError));
-      // Note: Resend's free tier with onboarding@resend.dev only sends to the verified email
-      // For production, a custom domain needs to be configured
+    if (emailResult.error) {
+      console.error('Email sending error:', emailResult.error);
     } else {
-      console.log('Email sent successfully:', emailData);
+      console.log('Email sent successfully:', emailResult.id);
     }
 
     console.log(`Student invited successfully: ${email}`);
@@ -262,8 +254,8 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         student: studentData,
-        emailSent: !emailError,
-        emailNote: emailError ? 'Email may not be delivered. Resend free tier only sends to verified emails.' : null
+        emailSent: !emailResult.error,
+        emailNote: emailResult.error ? `Email send failed: ${emailResult.error}` : null
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
