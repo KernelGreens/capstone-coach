@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
-import Resend from "https://esm.sh/resend@2.0.0";
+import { sendEmailViaResend, getResendFromEmail } from "../_shared/resendGateway.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,13 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const resendApiKey = Deno.env.get('RESEND_API_KEY');
-    if (!resendApiKey) {
-      console.error('RESEND_API_KEY is not configured');
-      throw new Error('Email service is not configured');
-    }
-    
-    const resend = new Resend.Resend(resendApiKey);
+    const fromEmail = getResendFromEmail();
     
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',

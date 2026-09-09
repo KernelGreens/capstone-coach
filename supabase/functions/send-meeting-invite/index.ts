@@ -1,6 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
-import Resend from "https://esm.sh/resend@2.0.0";
+import { sendEmailViaResend, getResendFromEmail } from "../_shared/resendGateway.ts";
 
 type Action = "create" | "update" | "cancel";
 
@@ -181,53 +181,47 @@ Deno.serve(async (req) => {
       attendees,
     });
 
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    const from = `Internship Platform <${getResendFromEmail()}>`;
+    const when = start.toUTCString();
+    const verb =
+      action === "cancel" ? "Cancelled" : action === "update" ? "Updated" : "Invitation";
+    const subject = `${action === "create" ? "📅" : action === "update" ? "🔄" : "❌"} ${verb}: ${first.title}`;
+    const html = `
+      <div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:auto">
+        <h2 style="margin-bottom:4px">${first.title}</h2>
+        <p style="color:#555;margin-top:0">${
+          action === "cancel"
+            ? "This meeting has been cancelled."
+            : action === "update"
+            ? "This meeting has been updated. Your calendar will be refreshed."
+            : "You have been invited to a meeting."
+        }</p>
+        <table style="font-size:14px;color:#333">
+          <tr><td style="padding:4px 12px 4px 0"><b>When</b></td><td>${when}</td></tr>
+          <tr><td style="padding:4px 12px 4px 0"><b>Duration</b></td><td>${first.duration_minutes || 60} minutes</td></tr>
+          ${first.location ? `<tr><td style="padding:4px 12px 4px 0"><b>Where</b></td><td>${first.location}</td></tr>` : ""}
+          ${first.meeting_link ? `<tr><td style="padding:4px 12px 4px 0"><b>Link</b></td><td><a href="${first.meeting_link}">Join</a></td></tr>` : ""}
+          <tr><td style="padding:4px 12px 4px 0"><b>With</b></td><td>${[organizer.name, ...attendees.map((a) => a.name)].join(", ")}</td></tr>
+        </table>
+        ${first.description ? `<p style="white-space:pre-wrap;color:#444">${first.description}</p>` : ""}
+        <p style="color:#888;font-size:12px">Open the attached calendar file to add or update this meeting in your calendar.</p>
+      </div>`;
+
+    const recipients = [organizer, ...attendees];
+    const attachmentName = action === "cancel" ? "cancel.ics" : "invite.ics";
+    const encoded = btoa(unescape(encodeURIComponent(ics)));
+
     let emailsSent = 0;
-    if (resendApiKey) {
-      const resend = new Resend.Resend(resendApiKey);
-      const from = `Internship Platform <${Deno.env.get("RESEND_FROM_EMAIL") || "onboarding@resend.dev"}>`;
-      const when = start.toUTCString();
-      const verb =
-        action === "cancel" ? "Cancelled" : action === "update" ? "Updated" : "Invitation";
-      const subject = `${action === "create" ? "📅" : action === "update" ? "🔄" : "❌"} ${verb}: ${first.title}`;
-      const html = `
-        <div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:auto">
-          <h2 style="margin-bottom:4px">${first.title}</h2>
-          <p style="color:#555;margin-top:0">${
-            action === "cancel"
-              ? "This meeting has been cancelled."
-              : action === "update"
-              ? "This meeting has been updated. Your calendar will be refreshed."
-              : "You have been invited to a meeting."
-          }</p>
-          <table style="font-size:14px;color:#333">
-            <tr><td style="padding:4px 12px 4px 0"><b>When</b></td><td>${when}</td></tr>
-            <tr><td style="padding:4px 12px 4px 0"><b>Duration</b></td><td>${first.duration_minutes || 60} minutes</td></tr>
-            ${first.location ? `<tr><td style="padding:4px 12px 4px 0"><b>Where</b></td><td>${first.location}</td></tr>` : ""}
-            ${first.meeting_link ? `<tr><td style="padding:4px 12px 4px 0"><b>Link</b></td><td><a href="${first.meeting_link}">Join</a></td></tr>` : ""}
-            <tr><td style="padding:4px 12px 4px 0"><b>With</b></td><td>${[organizer.name, ...attendees.map((a) => a.name)].join(", ")}</td></tr>
-          </table>
-          ${first.description ? `<p style="white-space:pre-wrap;color:#444">${first.description}</p>` : ""}
-          <p style="color:#888;font-size:12px">Open the attached calendar file to add or update this meeting in your calendar.</p>
-        </div>`;
-
-      const recipients = [organizer, ...attendees];
-      const attachmentName = action === "cancel" ? "cancel.ics" : "invite.ics";
-      const encoded = btoa(unescape(encodeURIComponent(ics)));
-
-      for (const r of recipients) {
-        const { error } = await resend.emails.send({
-          from,
-          to: [r.email],
-          subject,
-          html,
-          attachments: [{ filename: attachmentName, content: encoded }],
-        });
-        if (error) console.error("Email send failed", r.email, JSON.stringify(error));
-        else emailsSent++;
-      }
-    } else {
-      console.warn("RESEND_API_KEY not configured; skipping email invites");
+    for (const r of recipients) {
+      const result = await sendEmailViaResend({
+        from,
+        to: [r.email],
+        subject,
+        html,
+        attachments: [{ filename: attachmentName, content: encoded }],
+      });
+      if (result.error) console.error("Email send failed", r.email, result.error);
+      else emailsSent++;
     }
 
     // Persist calendar identity/sequence on every meeting row in the group

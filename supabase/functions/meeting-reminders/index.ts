@@ -250,25 +250,20 @@ async function sendPushNotification(
   }
 }
 
-// ─── HELPER: Send email via Resend ───
+// ─── HELPER: Send email via Resend gateway ───
+import { sendEmailViaResend } from "../_shared/resendGateway.ts";
+
 async function sendEmail(
-  apiKey: string,
+  _apiKey: string,
   from: string,
   opts: { to: string; subject: string; html: string }
 ) {
   try {
-    await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from,
-        to: opts.to,
-        subject: opts.subject,
-        html: opts.html,
-      }),
+    await sendEmailViaResend({
+      from,
+      to: opts.to,
+      subject: opts.subject,
+      html: opts.html,
     });
   } catch {
     // Silent email failure

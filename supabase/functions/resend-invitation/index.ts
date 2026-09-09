@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
-import Resend from "https://esm.sh/resend@2.0.0";
+import { sendEmailViaResend, getResendFromEmail } from "../_shared/resendGateway.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,10 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const resendApiKey = Deno.env.get('RESEND_API_KEY');
-    if (!resendApiKey) throw new Error('Email service is not configured');
-
-    const resend = new Resend.Resend(resendApiKey);
+    const fromEmail = getResendFromEmail();
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -119,17 +116,16 @@ serve(async (req) => {
       </html>
     `;
 
-    const fromEmail = Deno.env.get('RESEND_FROM_EMAIL') || 'onboarding@resend.dev';
-    const { error: emailError } = await resend.emails.send({
+    const emailResult = await sendEmailViaResend({
       from: `Internship Platform <${fromEmail}>`,
       to: [student.profiles?.email],
       subject: '🎓 Reminder: Join Internship Mentorship Platform',
       html: emailHtml,
     });
 
-    if (emailError) {
-      console.error('Email error:', emailError);
-      throw new Error('Failed to send email');
+    if (emailResult.error) {
+      console.error('Email error:', emailResult.error);
+      throw new Error(`Failed to send email: ${emailResult.error}`);
     }
 
     return new Response(
