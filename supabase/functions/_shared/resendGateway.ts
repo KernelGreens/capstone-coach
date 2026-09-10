@@ -45,5 +45,5 @@ export async function sendEmailViaResend(opts: SendEmailOptions): Promise<SendEm
 }
 
 export function getResendFromEmail(): string {
-  return Deno.env.get("RESEND_FROM_EMAIL") || "intern@kernelgreens.com";
+  return Deno.env.get("RESEND_FROM_EMAIL") || "capstone-intern@kernelgreens.com";
 }
