@@ -112,13 +112,21 @@ export default function Progress() {
             <h1 className="text-3xl font-bold">Progress Management</h1>
             <p className="text-muted-foreground">Review and manage student weekly progress</p>
           </div>
-          {selectedStudent && weeklyProgress.length === 0 && (
+          {students.length > 0 && (
             <InitializeWeeksDialog
-              studentId={selectedStudent.id}
-              trackId={selectedStudent.track_id}
-              startDate={selectedStudent.start_date}
-              endDate={selectedStudent.end_date}
-              onSuccess={fetchWeeklyProgress}
+              students={students.map((s) => ({
+                id: s.id,
+                track_id: s.track_id,
+                start_date: s.start_date,
+                end_date: s.end_date,
+                full_name: s.profiles?.full_name || 'Unknown',
+                track_name: s.tracks?.name || null,
+              }))}
+              defaultStudentId={selectedStudent?.id}
+              onSuccess={() => {
+                fetchData();
+                fetchWeeklyProgress();
+              }}
             />
           )}
         </div>
